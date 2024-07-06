@@ -12,7 +12,8 @@ using Microsoft.CodeAnalysis.Scripting;
 using Microsoft.Win32.SafeHandles;
 class Program
 {
-    public const string path = "\\..\\..\\..\\pages\\";
+    //public const string path = "../../../pages/"; //win
+    public const string path = "../../../pages/";   //linux
 
 
     public static CancellationTokenSource GlobalToken = new CancellationTokenSource();
