@@ -10,6 +10,7 @@ using System.Security.Cryptography;
 using Microsoft.CodeAnalysis.CSharp.Scripting;
 using Microsoft.CodeAnalysis.Scripting;
 using Microsoft.Win32.SafeHandles;
+using System.Net;
 class Program
 {
     //public const string path = "../../../pages/"; //win
@@ -21,6 +22,9 @@ class Program
     static void Main(string[] args)
     {
         Console.WriteLine("\nGRINDER SERVER\nPress ctrl+c to stop");
+        var d=File.CreateText(".path");
+        d.WriteLine("base directory");
+        d.Close();
 
         Console.CancelKeyPress += (sender, args) =>
         {
