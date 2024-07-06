@@ -14,7 +14,7 @@ using System.Net;
 class Program
 {
     //public const string path = "../../../pages/"; //win
-    public const string path = "../../../pages/";   //linux
+    public const string path = "pages/";   //linux
 
 
     public static CancellationTokenSource GlobalToken = new CancellationTokenSource();
@@ -22,9 +22,9 @@ class Program
     static void Main(string[] args)
     {
         Console.WriteLine("\nGRINDER SERVER\nPress ctrl+c to stop");
-        var d=File.CreateText(".path");
-        d.WriteLine("base directory");
-        d.Close();
+//       var d=File.CreateText("_path");
+//       d.WriteLine("base directory");
+//       d.Close();
 
         Console.CancelKeyPress += (sender, args) =>
         {
