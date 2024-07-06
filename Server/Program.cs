@@ -12,7 +12,7 @@ using Microsoft.CodeAnalysis.Scripting;
 using Microsoft.Win32.SafeHandles;
 class Program
 {
-    public const string path = @"pages/";
+    public const string path = @"../../../pages/";
 
 
     public static CancellationTokenSource GlobalToken = new CancellationTokenSource();
@@ -53,7 +53,7 @@ class Program
             {
                 if (recompile)
                 {
-                    var f=File.OpenRead($"{path}script.cs");
+                    var f=File.OpenRead($"{path}script.csx");
                     //var script=File.ReadAllText();
                     var script=CSharpScript.Create(f);
                     f.Close();
