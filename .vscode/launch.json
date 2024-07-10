@@ -6,6 +6,6 @@
             "type": "dotnet",
             "request": "launch",
             "projectPath": "${workspaceFolder}\\Server\\Server.csproj",
-        }
+         }
     ]
 }

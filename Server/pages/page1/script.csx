@@ -1,1 +1,11 @@
-System.Console.WriteLine("Hello from script page1");
+
+using static System.Exception;
+
+public Exception Start(string s)
+{
+    System.Console.WriteLine(s);
+        return null;
+}
+
+return Start(input);
+
