@@ -11,9 +11,11 @@
   </ItemGroup>
   <ItemGroup>
     <None Remove="meta.html" />
-    <None Remove="models\Container.cs" />
-    <!-- <None Remove="pages/script.cs" />
-    <None Remove="pages/page1/script.cs" /> -->
+    <None Remove="host.html" />
+    <None Remove="models\Container.csx" />
+    <None Remove="pages\script.csx" />
+    <None Remove="pages\page1\script.csx" /> 
+    <None Remove="services\const.csx" /> 
   </ItemGroup>
 
   <ItemGroup>
@@ -23,9 +25,6 @@
     <Content Include="host.html">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-  </ItemGroup>
-
-  <ItemGroup>
     <None Update="grinder.server.js">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

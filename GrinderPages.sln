@@ -7,13 +7,12 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Server", "Server\Server.csp
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Grinder", "Grinder\Grinder.csproj", "{AF365656-CC70-4455-A06B-24A0B38EDF34}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UserLibrary", "UserLibrary\UserLibrary.csproj", "{58044348-028E-4171-9E5F-FE1B5C925849}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
-	EndGlobalSection
-	GlobalSection(SolutionProperties) = preSolution
-		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{1928E0BE-6DFA-4FA7-B2F1-CF734EA40880}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
@@ -24,5 +23,12 @@ Global
 		{AF365656-CC70-4455-A06B-24A0B38EDF34}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AF365656-CC70-4455-A06B-24A0B38EDF34}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AF365656-CC70-4455-A06B-24A0B38EDF34}.Release|Any CPU.Build.0 = Release|Any CPU
+		{58044348-028E-4171-9E5F-FE1B5C925849}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{58044348-028E-4171-9E5F-FE1B5C925849}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{58044348-028E-4171-9E5F-FE1B5C925849}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{58044348-028E-4171-9E5F-FE1B5C925849}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
 	EndGlobalSection
 EndGlobal
