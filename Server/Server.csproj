@@ -12,10 +12,10 @@
   <ItemGroup>
     <None Remove="meta.html" />
     <None Remove="host.html" />
-    <None Remove="models\Container.csx" />
-    <None Remove="pages\script.csx" />
-    <None Remove="pages\page1\script.csx" /> 
-    <None Remove="services\const.csx" /> 
+    <None Update="models\Container.csx" />
+    <None Update="pages\script.csx" />
+    <None Update="pages\page1\script.csx" /> 
+    <None Update="services\const.csx" /> 
   </ItemGroup>
 
   <ItemGroup>
