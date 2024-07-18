@@ -70,8 +70,10 @@ public class Program
     {
         public T? ret;
 
-        public Manager manager;
+        public Manager? manager;
+
     }
+
     //Manager
 
 

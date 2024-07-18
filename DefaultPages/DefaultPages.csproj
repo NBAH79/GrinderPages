@@ -6,5 +6,10 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
-
+<ItemGroup>
+    <None Include="..\Server\models\Container.csx" />
+    <None Include="..\Server\pages\script.csx" />
+    <None Include="..\Server\pages\page1\script.csx" /> 
+    <None Include="..\Server\services\const.csx" /> 
+  </ItemGroup>
 </Project>
