@@ -1,6 +1,7 @@
 ﻿using static System.Exception;
 using System.Reflection;
 using Grinder;
+using System.Diagnostics;
 
 public class Container : IModel
 {
@@ -18,22 +19,24 @@ public void Instance(IManager manager, out IModel ret)
 {
     int id=0;
     Console.WriteLine("a");
-    var a=manager.GetAssembly("../../../dlls/UserLibrary.dll");
-    Console.WriteLine(a.ToString());
-    Type? t= manager.GetClass(a,"Static.Const");
-    Console.WriteLine(t.ToString());
-    ConstructorInfo? constructor = t.GetConstructor(Type.EmptyTypes);
-    object? obj = constructor?.Invoke(new object[] { });
-    //var m=manager.GetMethod(t, "GetModelEnumerator", new Type[] { typeof(string), typeof(int).MakeByRefType() });
-    var m=manager.GetMethod(t, "GetModelEnumerator", new Type[] { typeof(string) });
-    object x=m?.Invoke(obj,new object[]{"Container"});
-    Console.WriteLine(x.ToString());
-    ret= new Container((int)x);
-    //Console.WriteLine(t.ToString());
-    //t=c;
-    //return new Container(id);
-    //model.Style=x as string;
-    //return null;
+
+    Stopwatch sw=new Stopwatch();
+sw.Start();
+    var x=manager.Instance("UserLibrary","Static.Const");
+    id=manager.Invoke<int>(x,"GetModelEnumerator",new Type[] { typeof(string) },new object[]{"Container"});
+sw.Stop();
+Console.WriteLine(sw.ElapsedTicks);
+sw.Restart();
+    var y=manager.Static("UserLibrary","Static.Const_");
+    Console.WriteLine(y.ToString());
+sw.Stop();
+Console.WriteLine(sw.ElapsedTicks);
+Console.WriteLine(Stopwatch.Frequency);
+    id=manager.InvokeStatic<int>(y,"GetModelEnumerator",new Type[] { typeof(string) },new object[]{"Container"});
+
+    Console.WriteLine(id.ToString());
+    ret= new Container(id);
+
 }
 
 Instance(manager, out ret);

@@ -18,6 +18,7 @@ using Grinder;
 using System.Security.AccessControl;
 using Microsoft.CodeAnalysis;
 using System.Runtime.InteropServices;
+using System.Diagnostics;
 
 public class Program
 {
@@ -37,23 +38,46 @@ public class Program
     public class Manager : IManager
     {
         public List<IModel> models = new List<IModel>();
-        //здесь должна быть какая то обертка модели с названием файла или идентификатором из файла
-        //у каждой модели может быть функция реакции на события
-        //void OnEvent(object e);
         public List<IService> services = new List<IService>();
-
         public List<Assembly> assemblies = new List<Assembly>(); //подключение dll
 
-        // public MethodInfo? GetMethod(string assembly, string classname, string method)
-        // {  //type это classname или "Program"
-        //     Assembly? a = assemblies.Find(x => string.Equals(x.GetName().Name, assembly));
-        //     return a?.GetType(classname)?.GetMethod(method, BindingFlags.NonPublic | BindingFlags.Static);
+        // public Assembly? GetAssembly(string shortname) { 
+        //     return assemblies.FirstOrDefault<Assembly>(x=>string.Compare(x.GetName().Name,shortname)==0);
+        //     }
+        // public Type? GetClass(string shortname, string fullname) { 
+        //     var a=assemblies.FirstOrDefault<Assembly>(x=>string.Compare(x.GetName().Name,shortname)==0);
+        //     return a?.GetType(fullname);
+        //      }
+        // public MethodInfo? GetMethod(Type type, string name, Type[] parameters) {
+        //      return type.GetMethod(name,BindingFlags.Public | BindingFlags.Instance,null, CallingConventions.Any,parameters,null);
         // }
-        public Assembly GetAssembly(string filename) { return Assembly.LoadFrom(Path.GetFullPath(filename)); }
-        public Type? GetClass(Assembly assembly, string fullname) { 
-            return assembly.GetType(fullname);
-             }
-        public MethodInfo? GetMethod(Type type, string name, Type[] parameters) { return type.GetMethod(name,BindingFlags.Public | BindingFlags.Instance,null, CallingConventions.Any,parameters,null); }
+
+        public (Type? t,object? obj) Instance(string shortname, string fullname){
+            var a=assemblies.FirstOrDefault<Assembly>(x=>string.Compare(x.GetName().Name,shortname)==0);
+            var t=a?.GetType(fullname);
+            ConstructorInfo? constructor = t?.GetConstructor(Type.EmptyTypes);
+            return (t,constructor?.Invoke(new object[] { }));
+        }
+
+        public Type? Static(string shortname, string fullname){
+            var a=assemblies.FirstOrDefault<Assembly>(x=>string.Compare(x.GetName().Name,shortname)==0);
+            return a?.GetType(fullname);
+        }
+
+        //1 миллисекунда вместе с Instance
+        public T Invoke<T>((Type? t,object? obj) instance, string name, Type[] parametertypes, object[] parameters){
+            var m=instance.t?.GetMethod(name,BindingFlags.Public | BindingFlags.Instance , null, CallingConventions.Any,parametertypes,null);
+            object? ret=m?.Invoke(instance.obj,parameters);
+            return (T)(ret??default(T));
+        }
+
+        //примерно в 4 раза быстрее обычного Invoke, 0.25 миллисекунды
+        public T InvokeStatic<T>(Type? type, string name, Type[] parametertypes, object[] parameters){
+            var m=type?.GetMethod(name, BindingFlags.Public | BindingFlags.Static , null, CallingConventions.Any,parametertypes,null);
+            object? ret=m?.Invoke(null,parameters);
+            return (T)(ret??default(T));
+        }
+    
         //public MethodInfo? GetMethod(string fullobjectname,string name){return new MethodInfo();}
    
    //Item i = System.Activator.CreateInstance<Item>(obj);
@@ -63,7 +87,6 @@ public class Program
     public class Call<T>
     {
         public T? t;
-
         public object x = new object();
     }
     public class Call2<T>
@@ -171,24 +194,7 @@ public class Program
                     Call2<IModel> callmodel = new Call2<IModel>() { manager = manager };
                     Call<IService> callscript = new Call<IService>();
 
-                    manager.models.Clear();
-
-                    foreach (var f in Directory.GetFiles($"{path}/models/"))
-                    {
-                        Script model = CSharpScript.Create(File.ReadAllText(f), options, typeof(Call2<IModel>), null);
-                        model.RunAsync(globals: callmodel, catchException: catchException, new CancellationToken()).GetAwaiter().GetResult();
-                        if (callmodel.ret == null) break;
-                        else manager.models.Add(callmodel.ret);
-                        Console.WriteLine("model id:"+callmodel.ret._id);
-                    }
-
-                    foreach (var f in Directory.GetFiles($"{path}/services/"))
-                    {
-                        Script service = CSharpScript.Create(File.ReadAllText(f), options, typeof(Call<IService>), null);
-                        service.RunAsync(globals: callscript, catchException: catchException, new CancellationToken()).GetAwaiter().GetResult();
-                        if (callscript.t == null) break;
-                        else manager.services.Add(callscript.t);
-                    }
+                    
 
                     Console.WriteLine(AppDomain.CurrentDomain.BaseDirectory);
 
@@ -231,6 +237,26 @@ public class Program
                         // x.GetType("UserLibrary.Class1")?.GetMethod("Method1", BindingFlags.NonPublic | BindingFlags.Static)?
                         // .Invoke(null, new object[] { new string[] { "thee" } });
                         manager.assemblies.Add(x);
+
+
+                    }
+                    manager.models.Clear();
+
+                    foreach (var f in Directory.GetFiles($"{path}/models/"))
+                    {
+                        Script model = CSharpScript.Create(File.ReadAllText(f), options, typeof(Call2<IModel>), null);
+                        model.RunAsync(globals: callmodel, catchException: catchException, new CancellationToken()).GetAwaiter().GetResult();
+                        if (callmodel.ret == null) break;
+                        else manager.models.Add(callmodel.ret);
+                        Console.WriteLine("model id:"+callmodel.ret._id);
+                    }
+
+                    foreach (var f in Directory.GetFiles($"{path}/services/"))
+                    {
+                        Script service = CSharpScript.Create(File.ReadAllText(f), options, typeof(Call<IService>), null);
+                        service.RunAsync(globals: callscript, catchException: catchException, new CancellationToken()).GetAwaiter().GetResult();
+                        if (callscript.t == null) break;
+                        else manager.services.Add(callscript.t);
                     }
                     // try{
                     //     Call<IModel> model=new Call<IModel>(++counter);

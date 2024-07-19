@@ -19,5 +19,13 @@ public class Const{
     }
 
 }
+public static class Const_{
+
+    public static int GetModelEnumerator(string name){
+        //id=1;
+        return 1;
+    }
+
+}
 
 }
