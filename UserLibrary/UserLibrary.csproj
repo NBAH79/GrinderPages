@@ -6,7 +6,7 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
   <PropertyGroup>
-    <OutputPath>..\Server\dlls\</OutputPath>
+    <OutputPath>..\Server\Website\dlls\</OutputPath>
     <!-- Remove this if you multi-target and need the created net*, netcoreapp* subdirs -->
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
   </PropertyGroup>

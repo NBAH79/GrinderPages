@@ -22,79 +22,96 @@ using System.Diagnostics;
 
 public class Program
 {
-    public const string path = "../../../"; //win
-                                            //public const string path = "";   //linux
+    //public const string path = "Server\\WebSite"; //win
+    //public const string path = "";   //linux
 
 
 
-    public class Tools
+    // public class Tools
+    // {
+
+    //     public string HtmlTagOpen(Model model) => model == null ? string.Empty : $"<{model.Tag} id=\"{model.Id}\" class=\"{model.Class}\" style=\"{model.Style}\" />";
+    //     public string HtmlTagClose(Model model) => model == null ? string.Empty : $"</{model.Tag}>";
+
+    // }
+    public class Global_ : Global
     {
+        //public static CancellationTokenSource Token = new CancellationTokenSource();
+        public new string WWW = "http://localhost:8080/"; //82 порт не будет работать потому что на нем WebSocket!
+        public new string XXX = "ws://127.0.0.1:82"; //wss 443
+        public new string YYY = "ws://127.0.0.1:82"; //? будет ли wss 443
+        public new string IP = "127.0.0.1";
+        public new int PORT = 82;
 
-        public string HtmlTagOpen(IModel model) => model == null ? string.Empty : $"<{model.Tag} id=\"{model.Id}\" class=\"{model.Class}\" style=\"{model.Style}\" />";
-        public string HtmlTagClose(IModel model) => model == null ? string.Empty : $"</{model.Tag}>";
+        public string website = "Server\\WebSite";
 
-    }
-
+        //если 443, то и wss дописать и сертификат надо!
+    };
     public class Manager : IManager
     {
-        public List<IModel> models = new List<IModel>();
-        public List<IService> services = new List<IService>();
+        //public List<Model> models = new List<Model>();
+        //public List<IService> services = new List<IService>();
+        public Global global { get; set; } = new Global_();
+        public List<Page> pages = new List<Page>();
         public List<Assembly> assemblies = new List<Assembly>(); //подключение dll
 
-        // public Assembly? GetAssembly(string shortname) { 
-        //     return assemblies.FirstOrDefault<Assembly>(x=>string.Compare(x.GetName().Name,shortname)==0);
-        //     }
+        public Assembly? GetAssembly(string shortname)
+        {
+            return assemblies.FirstOrDefault<Assembly>(x => string.Compare(x.GetName().Name, shortname) == 0);
+        }
         // public Type? GetClass(string shortname, string fullname) { 
         //     var a=assemblies.FirstOrDefault<Assembly>(x=>string.Compare(x.GetName().Name,shortname)==0);
         //     return a?.GetType(fullname);
         //      }
-        // public MethodInfo? GetMethod(Type type, string name, Type[] parameters) {
-        //      return type.GetMethod(name,BindingFlags.Public | BindingFlags.Instance,null, CallingConventions.Any,parameters,null);
+        //  public MethodInfo? GetMethod(Type type, string name, bool instance, Type[] parameters) {
+        //       return type.GetMethod(name,BindingFlags.Public | (instance?BindingFlags.Instance:BindingFlags.Static),null, CallingConventions.Any,parameters,null);
+        //  }
+
+        // public Model? GetModel(int id){
+        //     return models.FirstOrDefault(x=>x._id==id);
         // }
 
-        public (Type? t,object? obj) Instance(string shortname, string fullname){
-            var a=assemblies.FirstOrDefault<Assembly>(x=>string.Compare(x.GetName().Name,shortname)==0);
-            var t=a?.GetType(fullname);
+        public Instance? GetInstance(string shortname, string classfullname)
+        {
+            var a = GetAssembly(shortname);//assemblies.FirstOrDefault<Assembly>(x=>string.Compare(x.GetName().Name,shortname)==0);
+            var t = a?.GetType(classfullname);
             ConstructorInfo? constructor = t?.GetConstructor(Type.EmptyTypes);
-            return (t,constructor?.Invoke(new object[] { }));
+            return new Instance() { type = t, obj = constructor?.Invoke(new object[] { }) };
         }
 
-        public Type? Static(string shortname, string fullname){
-            var a=assemblies.FirstOrDefault<Assembly>(x=>string.Compare(x.GetName().Name,shortname)==0);
-            return a?.GetType(fullname);
+        public Type? GetStatic(string shortname, string classfullname)
+        {
+            var a = GetAssembly(shortname);//assemblies.FirstOrDefault<Assembly>(x=>string.Compare(x.GetName().Name,shortname)==0);
+            return a?.GetType(classfullname);
         }
 
         //1 миллисекунда вместе с Instance
-        public T Invoke<T>((Type? t,object? obj) instance, string name, Type[] parametertypes, object[] parameters){
-            var m=instance.t?.GetMethod(name,BindingFlags.Public | BindingFlags.Instance , null, CallingConventions.Any,parametertypes,null);
-            object? ret=m?.Invoke(instance.obj,parameters);
-            return (T)(ret??default(T));
+        public T Invoke<T>(Instance? instance, string name, Type[] parametertypes, object[] parameters)
+        {
+            var m = instance?.GetMethod(name, false, parametertypes);
+            object? ret = m?.Invoke(instance?.obj, parameters);
+            return (T)(ret ?? default(T));
         }
 
         //примерно в 4 раза быстрее обычного Invoke, 0.25 миллисекунды
-        public T InvokeStatic<T>(Type? type, string name, Type[] parametertypes, object[] parameters){
-            var m=type?.GetMethod(name, BindingFlags.Public | BindingFlags.Static , null, CallingConventions.Any,parametertypes,null);
-            object? ret=m?.Invoke(null,parameters);
-            return (T)(ret??default(T));
+        public T InvokeStatic<T>(Type? type, string name, Type[] parametertypes, object[] parameters)
+        {
+            var m = type?.GetMethod(name, BindingFlags.Public | BindingFlags.Static, null, CallingConventions.Any, parametertypes, null);
+            object? ret = m?.Invoke(null, parameters);
+            return (T)(ret ?? default(T));
         }
-    
+
         //public MethodInfo? GetMethod(string fullobjectname,string name){return new MethodInfo();}
-   
-   //Item i = System.Activator.CreateInstance<Item>(obj);
+
+        //Item i = System.Activator.CreateInstance<Item>(obj);
+        public async Task SendText(Stream stream, string text) { Console.Write("OUTPUT:" + text); await Task.CompletedTask; }
     }
 
 
     public class Call<T>
     {
         public T? t;
-        public object x = new object();
-    }
-    public class Call2<T>
-    {
-        public T? ret;
-
         public Manager? manager;
-
     }
 
     //Manager
@@ -118,16 +135,41 @@ public class Program
 
     public static CancellationTokenSource GlobalToken = new CancellationTokenSource();
     public static volatile bool recompile = true;
-    static void Main(string[] args)
+    static async Task Main(string[] args)
     {
+        Global_ global = new Global_();
 
-        Tools tools = new Tools();
+        foreach (var a in args)
+        {
+            string parameter = a.TrimEnd('=');
+            string value = a.TrimStart('=');
+            switch (parameter)
+            {
+                case "-www": global.WWW = value; break;
+                case "-wss":
+                    global.XXX = global.YYY = value;
+                    global.PORT = int.Parse(value.TrimEnd(':'));
+                    break;
+                case "-website":
+                    global.website = value;
+                    break;
+                case "-?":
+                    Console.WriteLine("Аvailable parameters:\n-www: http server address with port\n-wss: websocket address\n-website: website base directory");
+                    Console.WriteLine("Еxample: server.exe -www=http://localhost:8080/ -wss=ws://127.0.0.1:82 -website=Server\\WebSite");
+                    break;
+                default: Console.WriteLine($"bad parameter:{parameter}\ntype -? for help"); break;
+            };
+        }
+
+        //Tools tools = new Tools();
         Manager manager = new Manager();
+        manager.global=global;
 
         Console.WriteLine("\nGRINDER SERVER\nPress ctrl+c to stop");
-        //       var d=File.CreateText("_path");
-        //       d.WriteLine("base directory");
-        //       d.Close();
+
+        //var d=File.CreateText("_path");
+        //d.WriteLine("base directory");
+        //d.Close();
 
         Console.CancelKeyPress += (sender, args) =>
         {
@@ -135,9 +177,30 @@ public class Program
             Console.WriteLine("\nStopped by user");
             GlobalToken.Cancel(true);
         };
+        //Console.WriteLine(">>> READY <<<");
+        Server.Listener listener = new Server.Listener();
+        var taskListener = Task.Factory.StartNew(async () => await Rebuild(manager));
+        //Console.WriteLine(">>> FINISHED <<<");
 
+        await listener.RunAsync(
+                manager,
+                global.WWW,
+                IPAddress.Parse(global.IP),
+                global.PORT,
+                (manager.global as Global_).website+"\\meta.html",
+                GlobalToken.Token
+                );
+
+        GlobalToken.Cancel();
+        Task.WaitAny(taskListener);
+        await Task.CompletedTask;
+    }
+
+    public static async Task Rebuild(Manager manager)
+    {
         FileSystemWatcher watcher = new FileSystemWatcher();
-        watcher.Path = path;
+
+        watcher.Path = (manager.global as Global_).website;
 
         //// watcher.NotifyFilter = NotifyFilters.LastAccess | NotifyFilters.LastWrite
         ////    | NotifyFilters.FileName | NotifyFilters.DirectoryName;
@@ -178,9 +241,13 @@ public class Program
         // //     Console.WriteLine(result); // 49
         // // } 
 
+        //Call<Model> callmodel = new Call<Model>() { manager = manager };
+        Call<Page> callpage = new Call<Page>() { manager = manager };
+
+
         while (!GlobalToken.IsCancellationRequested)
         {
-            Task.Delay(3000);
+            await Task.Delay(3000);
             try
             {
                 if (recompile)
@@ -191,14 +258,12 @@ public class Program
                     //public static List<Script> models = new List<Script>();
 
                     //ublic static List<Script> services = new List<Script>();
-                    Call2<IModel> callmodel = new Call2<IModel>() { manager = manager };
-                    Call<IService> callscript = new Call<IService>();
 
-                    
+
 
                     Console.WriteLine(AppDomain.CurrentDomain.BaseDirectory);
 
-                    foreach (var f in Directory.GetFiles($"{path}/dlls/", "*.dll"))//Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..."));
+                    foreach (var f in Directory.GetFiles($"{(manager.global as Global_).website}/dlls/", "*.dll"))//Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..."));
                     {
 
                         var x = Assembly.LoadFrom(Path.GetFullPath(f));
@@ -240,23 +305,25 @@ public class Program
 
 
                     }
-                    manager.models.Clear();
+                    // manager.models.Clear();
 
-                    foreach (var f in Directory.GetFiles($"{path}/models/"))
-                    {
-                        Script model = CSharpScript.Create(File.ReadAllText(f), options, typeof(Call2<IModel>), null);
-                        model.RunAsync(globals: callmodel, catchException: catchException, new CancellationToken()).GetAwaiter().GetResult();
-                        if (callmodel.ret == null) break;
-                        else manager.models.Add(callmodel.ret);
-                        Console.WriteLine("model id:"+callmodel.ret._id);
-                    }
+                    // foreach (var f in Directory.GetFiles($"{path}/components/"))
+                    // {
+                    //     Script model = CSharpScript.Create(File.ReadAllText(f), options, typeof(Call<Model>), null);
+                    //     model.RunAsync(globals: callmodel, catchException: catchException, new CancellationToken()).GetAwaiter().GetResult();
+                    //     if (callmodel.t == null) break;
+                    //     else manager.models.Add(callmodel.t);
+                    //     Console.WriteLine("model id:" + callmodel.t._id);
+                    // }
 
-                    foreach (var f in Directory.GetFiles($"{path}/services/"))
+                    manager.pages.Clear();
+                    foreach (var f in Directory.GetFiles($"{(manager.global as Global_).website}/pages/"))
                     {
-                        Script service = CSharpScript.Create(File.ReadAllText(f), options, typeof(Call<IService>), null);
-                        service.RunAsync(globals: callscript, catchException: catchException, new CancellationToken()).GetAwaiter().GetResult();
-                        if (callscript.t == null) break;
-                        else manager.services.Add(callscript.t);
+                        Script service = CSharpScript.Create(File.ReadAllText(f), options, typeof(Call<Page>), null);
+                        service.RunAsync(globals: callpage, catchException: catchException, new CancellationToken()).GetAwaiter().GetResult();
+                        if (callpage.t == null) break;
+                        else manager.pages.Add(callpage.t);
+                        Console.WriteLine("page id:" + callpage.t._id);
                     }
                     // try{
                     //     Call<IModel> model=new Call<IModel>(++counter);
@@ -270,10 +337,10 @@ public class Program
 
 
                     //int counter=0;
-                    foreach (var m in manager.models)
-                    {
-                        Console.WriteLine($"{tools.HtmlTagOpen(m)} - {tools.HtmlTagClose(m)}");
-                    }
+                    // foreach (var m in manager.models)
+                    // {
+                    //     Console.WriteLine($"{tools.HtmlTagOpen(m)} - {tools.HtmlTagClose(m)}");
+                    // }
 
 
                     //Script<object> script = CSharpScript.Create(File.ReadAllText($"{path}/models/container.csx"), options, typeof(Model), null);
@@ -296,9 +363,12 @@ public class Program
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex);
+                Console.WriteLine("Exception:" + ex);
+                await Task.Delay(10000);
             }
+            await Task.CompletedTask;
         }
+
     }
 
     private static void OnChanged(object source, FileSystemEventArgs e)

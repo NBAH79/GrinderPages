@@ -6,25 +6,29 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
+
+  
   <ItemGroup>
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Scripting" Version="4.10.0" />
   </ItemGroup>
   <ItemGroup>
-    <None Remove="meta.html" />
-    <None Remove="host.html" />
-    <None Remove="models\Container.csx" />
-    <None Remove="pages\script.csx" />
-    <None Remove="pages\page1\script.csx" /> 
-    <None Remove="services\const.csx" /> 
+    <None Remove="WebSite\meta.html" />
+    <None Remove="WebSite\host.html" />
+    <None Include="WebSite\components\Container.cs" />
+    <None Include="website\pages\Index.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Remove="WebSite\components\Container.cs" />
+    <Compile Remove="website\pages\Index.cs" />
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="meta.html">
+    <!-- <Content Include="meta.html">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="host.html">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
+    </Content> -->
     <None Update="grinder.server.js">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

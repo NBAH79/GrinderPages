@@ -5,10 +5,16 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Grinder;
+namespace Server;
 
-public interface ISession
-{
-    public TcpClient client { get; set; }
-    //public IPage? template { get; set; }
-}
+    public class Session
+    {
+        public Page? page;
+        public TcpClient client=new ();
+
+        public Session(TcpClient client, Page? template)
+        {
+            this.client = client;
+            this.page = null;
+        }
+    }

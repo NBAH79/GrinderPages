@@ -3,9 +3,38 @@
     "configurations": [
         {
             "name": "C#: Server [Default Configuration]",
-            "type": "dotnet",
+            "type": "coreclr", //"dotnet"
             "request": "launch",
-            "projectPath": "${workspaceFolder}\\Server\\Server.csproj",
-         }
+            "preLaunchTask": "build",
+            //"projectPath": "${workspaceFolder}\\Server\\Server.csproj",
+            "program": "${workspaceFolder}\\Server\\bin\\Debug\\net8.0\\Server.exe",
+            "cwd": "${workspaceFolder}",
+            // "stopAtEntry": false,
+            // "serverReadyAction": {
+            //     "action": "openExternally"
+            // },
+            // "env": {
+            //     "ASPNETCORE_ENVIRONMENT": "Development",
+            //     "ASPNETCORE_URLS":"https://localhost:8080"
+            // },
+            "linux": {
+                "args": [
+                    "-website:Server\\WebSite",
+                    ""
+                ]
+            },
+            "osx": {
+                "args": [
+                    "-?",
+                    ""
+                ]
+            },
+            "windows": {
+                "args": [
+                    "-website:Server\\WebSite",
+                    ""
+                ]
+            }
+        }
     ]
 }

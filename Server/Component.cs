@@ -21,199 +21,199 @@ namespace Server;
 
 
 
-    // public abstract class Component
-    // {
-    //     protected readonly string id;
+    public abstract class Component
+    {
+        protected readonly string id;
         
-    //     private readonly List<Component> children;
+        private readonly List<Component> children;
 
-    //     protected int hash=0;
+        protected int hash=0;
 
-    //     //public long parent = 0;
-    //     public string Tag = "div";//string.Empty;
-    //     public string Class = string.Empty;
-    //     public string Style = string.Empty;
-    //     public string Content = string.Empty;
+        //public long parent = 0;
+        public string Tag = "div";//string.Empty;
+        public string Class = string.Empty;
+        public string Style = string.Empty;
+        public string Content = string.Empty;
         
-    //     public Dictionary<string, string> Attributes = new Dictionary<string, string>();
-    //     //тут аттрибуты и события
-    //     public List<string> Events = new();
-        
-
-    //     public string Id { get => id; }
-
-
-    //     //конструктор шаблона
-    //     public Component()
-    //     {
-    //         id = Convert.ToBase64String(BitConverter.GetBytes(DateTime.UtcNow.Ticks));
-    //         children = new List<Component>();
-    //     }
-
-    //     //конструктор шаблона
-    //     public Component(List<Component> template)
-    //     {
-    //         id = Convert.ToBase64String(BitConverter.GetBytes(DateTime.UtcNow.Ticks));
-    //         children = new List<Component>();
-    //         foreach (var x in template) this.children.Add(x.Instantiate()); //инстанс
-    //     }
-
-    //     //Инстанс
-    //     public abstract Component Instantiate();
-    //     //{
-    //     //    var ret=this.MemberwiseClone();
-    //     //    return ret as WebComponent;
-    //     //    ////WebComponent copy= (WebComponent) _copy;
-    //     //    //id = Convert.ToBase64String(BitConverter.GetBytes(DateTime.UtcNow.Ticks));
-    //     //    //children = new ();
-    //     //    //foreach (var x in copy.children) children.Add(x.Instantiate());
-    //     //    //hash=0;
-    //     //    //Tag=copy.Tag;
-    //     //    //Class=copy.Class;
-    //     //    //Style=copy.Style;
-    //     //    //Content=copy.Content;
-    //     //    //Attributes=new ();
-    //     //    //foreach(var a in copy.Attributes) Attributes.Add(a.Key, a.Value);
-    //     //    //Events=new();
-    //     //    //foreach (var e in copy.Events) this.Events.Add(new string(e));
-    //     //    ////сделать hash=OnUpdate и он будет другой потому что id!
-    //     //    //_ = OnUpdate();
-    //     //}
-
+        public Dictionary<string, string> Attributes = new Dictionary<string, string>();
+        //тут аттрибуты и события
+        public List<string> Events = new();
         
 
-    //     //надо чтоб возвращало просто строку
-    //     public async Task OnCreate(Stream stream, Component? parent = null)
-    //     {
-    //         await OnUpdate();
-    //         string res = $"|{id}|{parent?.id}|{Tag}|{Class}|{Style}|";
-    //         foreach (var a in Attributes) res += $"{a.Key}={a.Value};";
-    //         res += "|";
-    //         foreach (var e in Events) res += $"{e};";
-    //         res += $"|{Content}";
-    //         hash = res.GetHashCode();
-    //         await SendText(stream, res);
-    //     }
+        public string Id { get => id; }
 
-    //     //просто тупая отправка
-    //     //надо чтоб возвращало просто строку
-    //     public async Task OnRender(Stream stream, bool refresh, Component? parent = null)
-    //     {
-    //         await OnUpdate();
-    //         string res = $"|{id}|{parent?.id}|{Tag}|{Class}|{Style}|";
-    //         foreach (var a in Attributes) res += $"{a.Key}={a.Value};";
-    //         res += "|";
-    //         //евенты не обновлять, даже лучше их отдельно сделать
-    //         //if (refresh) foreach (var e in Events) res += $"{e};";
-    //         res += $"|{Content}";
-    //         int newhash = res.GetHashCode();
-    //         //if (newhash == hash && !refresh) return;
-    //         await SendText(stream, res);
-    //         hash = newhash;
-    //     }
 
-    //     //Create и Render зашиты, а эти непонятные переопеределяются
-    //     public abstract Task OnEvent(Stream stream, string[] operands);// { await Task.CompletedTask; }
-    //     public abstract Task OnUpdate();// { await Task.CompletedTask; }
-    //     public abstract void OnRelease();// { }
-    //     public async Task Create(Stream stream, Component? parent = null)
-    //     {
-    //         await OnCreate(stream, parent);
-    //         foreach (var x in children) await x.Create(stream, this);
-    //     }
+        //конструктор шаблона
+        public Component()
+        {
+            id = Convert.ToBase64String(BitConverter.GetBytes(DateTime.UtcNow.Ticks));
+            children = new List<Component>();
+        }
 
-    //     public async Task Render(Stream stream, bool refresh, Component? parent = null)
-    //     {
-    //         await OnRender(stream, refresh, parent);
-    //         foreach (var c in children) await c.Render(stream, refresh, this);
-    //     }
+        //конструктор шаблона
+        public Component(List<Component> template)
+        {
+            id = Convert.ToBase64String(BitConverter.GetBytes(DateTime.UtcNow.Ticks));
+            children = new List<Component>();
+            foreach (var x in template) this.children.Add(x.Instantiate()); //инстанс
+        }
 
-    //     public async Task Event(Stream stream, string[] operands)
-    //     {
-    //         await OnEvent(stream, operands);
-    //         foreach (var x in children) await x.Event(stream, operands);
-    //     }
+        //Инстанс
+        public abstract Component Instantiate();
+        //{
+        //    var ret=this.MemberwiseClone();
+        //    return ret as WebComponent;
+        //    ////WebComponent copy= (WebComponent) _copy;
+        //    //id = Convert.ToBase64String(BitConverter.GetBytes(DateTime.UtcNow.Ticks));
+        //    //children = new ();
+        //    //foreach (var x in copy.children) children.Add(x.Instantiate());
+        //    //hash=0;
+        //    //Tag=copy.Tag;
+        //    //Class=copy.Class;
+        //    //Style=copy.Style;
+        //    //Content=copy.Content;
+        //    //Attributes=new ();
+        //    //foreach(var a in copy.Attributes) Attributes.Add(a.Key, a.Value);
+        //    //Events=new();
+        //    //foreach (var e in copy.Events) this.Events.Add(new string(e));
+        //    ////сделать hash=OnUpdate и он будет другой потому что id!
+        //    //_ = OnUpdate();
+        //}
 
-    //     //если есть параметры то это должно сработать до render
-    //     //public async Task Update()
-    //     //{
-    //     //    await OnUpdate();
-    //     //    foreach (var x in children) await x.Update();
-    //     //}
+        
 
-    //     //с задержкой дает возможность прокрутить анимацию
-    //     public async Task Destroy(Stream stream, int msec)
-    //     {
-    //         OnRelease();
-    //         await OnUpdate();
-    //         await Render(stream, true);
-    //         await SendText(stream, $"{id}|{msec}");
-    //         //_=Task.Factory.StartNew(async () =>
-    //         //{
-    //         //      await Task.Delay(msec);
-    //         //      await Node.SendText(stream, $"{id}|");
-    //         //});
-    //     }
-    // }
+        //надо чтоб возвращало просто строку
+        public async Task OnCreate(Stream stream, Component? parent = null)
+        {
+            await OnUpdate();
+            string res = $"|{id}|{parent?.id}|{Tag}|{Class}|{Style}|";
+            foreach (var a in Attributes) res += $"{a.Key}={a.Value};";
+            res += "|";
+            foreach (var e in Events) res += $"{e};";
+            res += $"|{Content}";
+            hash = res.GetHashCode();
+           //// await SendText(stream, res);
+        }
 
-    // public class Frame : Component
-    // {
-    //     public override Component Instantiate()
-    //     {
-    //         var ret = this.MemberwiseClone();
-    //         return ret as Component;
-    //     }
-    //     public Frame(string Class, string Style, List<Component> children):base(children)
-    //     {
-    //         Tag = "div";
-    //         this.Class = "frame " + Class;
-    //         this.Style = Style;
-    //     }
-    //     public override async Task OnEvent(Stream stream, string[] operands) { await Task.CompletedTask; }
-    //     public override async Task OnUpdate() { await Task.CompletedTask; }
-    //     public override void OnRelease() { }
-    // }
+        //просто тупая отправка
+        //надо чтоб возвращало просто строку
+        public async Task OnRender(Stream stream, bool refresh, Component? parent = null)
+        {
+            await OnUpdate();
+            string res = $"|{id}|{parent?.id}|{Tag}|{Class}|{Style}|";
+            foreach (var a in Attributes) res += $"{a.Key}={a.Value};";
+            res += "|";
+            //евенты не обновлять, даже лучше их отдельно сделать
+            //if (refresh) foreach (var e in Events) res += $"{e};";
+            res += $"|{Content}";
+            int newhash = res.GetHashCode();
+            //if (newhash == hash && !refresh) return;
+            ////await SendText(stream, res);
+            hash = newhash;
+        }
 
-    // public class Block : Component
-    // {
-    //     public override Component Instantiate()
-    //     {
-    //         var ret = this.MemberwiseClone();
-    //         return ret as Component;
-    //     }
-    //     public Block(string Class, string Style, List<Component> children) : base(children)
-    //     {
-    //         Tag = "div";
-    //         this.Class = Class;
-    //         this.Style = Style;
-    //     }
-    //     public override async Task OnEvent(Stream stream, string[] operands) { await Task.CompletedTask; }
-    //     public override async Task OnUpdate() { await Task.CompletedTask; }
-    //     public override void OnRelease() { }
-    // }
-    // public class Text : Component
-    // {
-    //     public override Component Instantiate()
-    //     {
-    //         var ret = this.MemberwiseClone();
-    //         return ret as Component;
-    //     }
-    //     public Text(string Class, string Style, string text)
-    //     {
-    //         Tag = "p";
-    //         this.Class = Class;
-    //         this.Style = Style;
-    //         this.Content = text;
-    //     }
-    //     public override async Task OnEvent(Stream stream, string[] operands) { await Task.CompletedTask; }
-    //     public override async Task OnUpdate() { await Task.CompletedTask; }
-    //     public override void OnRelease() { }
-    //     public void SetText(string newtext)
-    //     {
-    //         Content = newtext;
-    //         hash = 0;
-    //     }
-    // }
+        //Create и Render зашиты, а эти непонятные переопеределяются
+        public abstract Task OnEvent(Stream stream, string[] operands);// { await Task.CompletedTask; }
+        public abstract Task OnUpdate();// { await Task.CompletedTask; }
+        public abstract void OnRelease();// { }
+        public async Task Create(Stream stream, Component? parent = null)
+        {
+            await OnCreate(stream, parent);
+            foreach (var x in children) await x.Create(stream, this);
+        }
+
+        public async Task Render(Stream stream, bool refresh, Component? parent = null)
+        {
+            await OnRender(stream, refresh, parent);
+            foreach (var c in children) await c.Render(stream, refresh, this);
+        }
+
+        public async Task Event(Stream stream, string[] operands)
+        {
+            await OnEvent(stream, operands);
+            foreach (var x in children) await x.Event(stream, operands);
+        }
+
+        //если есть параметры то это должно сработать до render
+        //public async Task Update()
+        //{
+        //    await OnUpdate();
+        //    foreach (var x in children) await x.Update();
+        //}
+
+        //с задержкой дает возможность прокрутить анимацию
+        public async Task Destroy(Stream stream, int msec)
+        {
+            OnRelease();
+            await OnUpdate();
+            await Render(stream, true);
+            ////await SendText(stream, $"{id}|{msec}");
+            //_=Task.Factory.StartNew(async () =>
+            //{
+            //      await Task.Delay(msec);
+            //      await Node.SendText(stream, $"{id}|");
+            //});
+        }
+    }
+
+    public class Frame : Component
+    {
+        public override Component Instantiate()
+        {
+            var ret = this.MemberwiseClone();
+            return ret as Component;
+        }
+        public Frame(string Class, string Style, List<Component> children):base(children)
+        {
+            Tag = "div";
+            this.Class = "frame " + Class;
+            this.Style = Style;
+        }
+        public override async Task OnEvent(Stream stream, string[] operands) { await Task.CompletedTask; }
+        public override async Task OnUpdate() { await Task.CompletedTask; }
+        public override void OnRelease() { }
+    }
+
+    public class Block : Component
+    {
+        public override Component Instantiate()
+        {
+            var ret = this.MemberwiseClone();
+            return ret as Component;
+        }
+        public Block(string Class, string Style, List<Component> children) : base(children)
+        {
+            Tag = "div";
+            this.Class = Class;
+            this.Style = Style;
+        }
+        public override async Task OnEvent(Stream stream, string[] operands) { await Task.CompletedTask; }
+        public override async Task OnUpdate() { await Task.CompletedTask; }
+        public override void OnRelease() { }
+    }
+    public class Text : Component
+    {
+        public override Component Instantiate()
+        {
+            var ret = this.MemberwiseClone();
+            return ret as Component;
+        }
+        public Text(string Class, string Style, string text)
+        {
+            Tag = "p";
+            this.Class = Class;
+            this.Style = Style;
+            this.Content = text;
+        }
+        public override async Task OnEvent(Stream stream, string[] operands) { await Task.CompletedTask; }
+        public override async Task OnUpdate() { await Task.CompletedTask; }
+        public override void OnRelease() { }
+        public void SetText(string newtext)
+        {
+            Content = newtext;
+            hash = 0;
+        }
+    }
 
     // public class Button : Component
     // {
