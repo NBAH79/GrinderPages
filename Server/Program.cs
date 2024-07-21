@@ -163,7 +163,7 @@ public class Program
 
         //Tools tools = new Tools();
         Manager manager = new Manager();
-        manager.global=global;
+        manager.global = global;
 
         Console.WriteLine("\nGRINDER SERVER\nPress ctrl+c to stop");
 
@@ -179,6 +179,11 @@ public class Program
         };
         //Console.WriteLine(">>> READY <<<");
         Server.Listener listener = new Server.Listener();
+
+        listener.RegisterService(new PongService(manager));
+        listener.RegisterService(new EchoService(manager));
+        listener.RegisterService(new EventService(manager));
+
         var taskListener = Task.Factory.StartNew(async () => await Rebuild(manager));
         //Console.WriteLine(">>> FINISHED <<<");
 
@@ -187,7 +192,7 @@ public class Program
                 global.WWW,
                 IPAddress.Parse(global.IP),
                 global.PORT,
-                (manager.global as Global_).website+"\\meta.html",
+                (manager.global as Global_).website + "\\meta.html",
                 GlobalToken.Token
                 );
 
@@ -377,9 +382,210 @@ public class Program
         if (!recompile) recompile = true;
     }
 
+
+
+
     public static object? Instantiate(Type type, object?[] parameters)
     {
         ConstructorInfo? constructor = type.GetConstructor(Type.EmptyTypes);
         return constructor?.Invoke(parameters);
     }
+
+    public class PongService : Server.IService
+    {
+        public override void Register(Server.Listener listener)
+        {
+            listener.parser.OnPong += OnPong;
+            //sendPing = grinder.SendPing;
+        }
+        public PongService(IManager manager) {this.manager=manager; }
+        //public SendPong sendPing = (async (a, b) => { return await Task.FromResult(false); });
+
+        public async Task OnPong(Server.Session session, byte[] data, uint id)// byte[] frame, int opcode, ulong pos, ulong len)
+        {
+            var pong = new Server.Listener.Pong(data);
+            if (pong.IsCorrect) Console.WriteLine($"Pong: {id} ({pong.ping}) ");
+            else Console.WriteLine($"Pong: error data! ");
+            await Task.CompletedTask;
+        }
+    }
+
+    //этот сервис отправляет страницу если запрос был именно URL
+    //теоретически у сервера могут спрашивать и другие системы, например приложение
+    //тогда надо высылать данные соответственно логике этого приложения
+    // public class UrlService : Server.IService
+    // {
+    //     public override void Register(Server.Listener listener)
+    //     {
+    //         listener.parser.OnLson += OnLson;
+    //         listener.parser.OnUpdate += OnUpdate;
+    //     }
+
+    //     public UrlService(IManager manager) {this.manager=manager; }
+
+    //     public async Task OnLson(Server.Session session, string text)// byte[] frame, int opcode, ulong pos, ulong len)
+    //     {
+    //         //string text = Encoding.UTF8.GetString(msg.data);
+    //         string[] operands = Lson.Parse(text);
+    //         if (operands.Length == 0) return;
+    //         var _command = operands[0];
+
+
+    //         //// тут еще page release с таймером
+
+    //         if (operands[0] == "URL") //operands.length==1
+    //         {
+    //             Console.WriteLine($"Requested page: {text}");
+    //             var _url = (operands.Length > 1) ? operands[1] : Global.WWW + "Err404.html";
+    //             //if (operands.Length<2) return await Task.FromResult(false);//{
+    //             //    //переход на главную
+    //             //}
+    //             var _operands = _url.Split('?');
+    //             var _location = _operands[0];
+    //             if (string.Compare(_location, Global.WWW) == 0) _location = Global.WWW + "Index.html";
+    //             var _parameters = (operands.Length > 1) ? operands[1] : "";
+
+    //             //if (_location==CurrentPage.Url) await Task.FromResult(true); //а может рефреш?
+
+
+
+    //             session.page = Program.InstantiatePage(_location);// .Find(x => string.Compare(x.Url, _location) == 0);
+
+    //             //if (p == null) session.page = templates[0].Instantiate(); //404
+    //             //else session.page = p.Instantiate();
+
+    //             //await CurrentPage.OnInitialize();
+    //             await session.page.Create(session.client.GetStream(), _url, new Dictionary<string, string>());
+    //             //await CurrentPage.OnParametersSet("");
+    //             //Console.WriteLine($"Error404: ({operands.Length})");
+    //             Console.WriteLine($"Location: ({operands.Length}) {_parameters}");
+
+    //             //существующая страница может принять другие параметры
+    //             //if (param.Length > 1)
+    //             //{ //а хрен его знает сколько этих '?' там
+    //             //    var parameters = Lson.Url(param[1]);
+    //             //    if (parameters.Count > 0) await CurrentPage.OnParametersSet(parameters);
+    //             //    await CurrentPage.OnRender(stream, param[0], parameters);
+    //             //    Console.WriteLine($"Parameters: ({operands.Length}) {param[1]}");
+    //             //}
+    //             //else await CurrentPage.OnRender(stream, param[0], new Dictionary<string, string>());
+    //             return;
+
+    //         }
+    //         if (operands[0] == "UPD")
+    //         {
+    //             if (session.page == null) return;
+    //             //await session.page.Update();
+    //             await session.page.Render(session.client.GetStream(), "", true, new Dictionary<string, string>());
+    //             return;
+    //         }
+    //         //if (operands[0] == "REL")
+    //         //{
+    //         //    session.page.Release(session.client.GetStream());
+    //         //}
+    //         if (operands.Length > 1 && session.page != null) await session.page.Event(session.client.GetStream(), operands);
+    //         return;
+    //     }
+    //     public async Task OnUpdate(Server.Session session)// byte[] frame, int opcode, ulong pos, ulong len)
+    //     {
+    //         if (session.page == null) return;
+    //         //await session.page.Update();
+    //         await session.page.Render(session.client.GetStream(), "", false, new Dictionary<string, string>());
+    //     }
+
+    //     public static string? GetOperand(string[] operands, int n, string? def = null)
+    //     {
+    //         if (operands.Count() > n) return operands[n];
+    //         return def;
+    //     }
+
+    // }
+
+
+    public class EchoService : Server.IService
+    {
+        //по логике передача файла должна начинаться с текстового соообщения, в котором сказано название файла и инициирован прием
+        //вся сессия переключается на прием данных, и если это текст - значит что то пошло не так
+        //если данные прервались - разорвать соединение
+
+        public override void Register(Server.Listener listener)
+        {
+            listener.parser.OnData += OnData;
+        }
+
+        public EchoService(IManager manager) {this.manager=manager; }
+        public async Task OnData(Server.Session session, Server.Transfer transfer)// byte[] frame, int opcode, ulong pos, ulong len)
+        {
+            Console.WriteLine($"({transfer.position} of {transfer.length}) ");
+            try
+            {
+                await Server.Listener.SendData(session.client.GetStream(), transfer, 1);
+            }
+            catch { }
+        }
+    }
+
+    public class EventService : Server.IService
+    {
+        //Button button=new ();
+        //Input input=new ();
+
+        public override void Register(Server.Listener listener)
+        {
+            listener.parser.OnLson += OnLson;
+        }
+        public EventService(IManager manager) {this.manager=manager; }   
+        public async Task OnLson(Server.Session session, string text)// byte[] frame, int opcode, ulong pos, ulong len)
+        {
+            //string text = Encoding.UTF8.GetString(msg.data);
+            string[] operands = Lson.Parse(text);
+
+            await Task.CompletedTask;
+            //Console.WriteLine($"Text: ({operands.Count()})");
+            //switch (operands[0])
+            //{
+            //    case string when string.IsNullOrEmpty(text):
+            //        break;
+            //    case "button":
+            //        {
+            //            if (operands.Count() == 1) await button.Destroy(stream, 3000);
+            //            else
+            //            {
+            //                string? temp = GetOperand(operands, 1);
+            //                if (!string.IsNullOrEmpty(temp)) button.height = temp;
+            //                temp = GetOperand(operands, 2);
+            //                if (!string.IsNullOrEmpty(temp)) button.title = temp;
+            //                button.opacity = "1";
+            //                button.Class = "two";
+            //                button.OnUpdate();
+            //                await button.Render(stream,true,false);// $"<button style='width:200px;height:{operands[1]}'>BUTTON</button>");
+            //            }
+            //        }
+            //        break;
+            //    case "input":
+            //        {
+            //            string? temp = GetOperand(operands, 1);
+            //            if (!string.IsNullOrEmpty(temp)) input.type = temp;
+            //            temp = GetOperand(operands, 2);
+            //            if (!string.IsNullOrEmpty(temp)) input.placeholder = temp;
+            //            await input.Render(stream,true);
+            //            // "<input style='width:200px;height:48px' type='text' placeholder='some text'><label>INPUT</label></input>");
+            //        }
+            //        break;
+            //    default:
+            //        //byte[] data = Encoding.UTF8.GetBytes(__t);
+            //        //foreach (var d in data) Global.console.WriteLine($"{d:X}");
+            //        //await Node.Send2(__s, "<p>UNKNOWN COMMAND</p>");
+            //        await SendText(stream, operands[0]);
+            //        break;
+            //}
+        }
+
+        public static string? GetOperand(string[] operands, int n, string? def = null)
+        {
+            if (operands.Count() > n) return operands[n];
+            return def;
+        }
+    }
+
 }

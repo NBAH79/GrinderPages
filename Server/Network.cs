@@ -69,10 +69,7 @@ namespace Server
         public bool LastFrame { get => position == length; } //а у последнего позиция на 100%, иначе 100% прогрессбары не покажут
     }
 
-    public interface IService
-    {
-        public void Register(Listener listener);
-    }
+ 
 
     public class ServiceManager
     {
@@ -124,7 +121,7 @@ namespace Server
 <html lang='en'>
     <head>
         {meta}
-        <script src='grinder.server.js'></script>
+        <script src='js/grinder.server.js'></script>
         <script type=""text/javascript"">
             server.init(['{manager.global.YYY}','URL']);
         </script>
