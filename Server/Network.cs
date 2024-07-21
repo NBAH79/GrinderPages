@@ -123,7 +123,7 @@ namespace Server
         {meta}
         <script src='js/grinder.server.js'></script>
         <script type=""text/javascript"">
-            server.init(['{manager.global.YYY}','URL']);
+            server.init(['{Global.YYY}','URL']);
         </script>
     </head>
     <body></body>

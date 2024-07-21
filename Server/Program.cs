@@ -20,6 +20,21 @@ using Microsoft.CodeAnalysis;
 using System.Runtime.InteropServices;
 using System.Diagnostics;
 
+
+public static class Global
+    {
+        //public static CancellationTokenSource Token = new CancellationTokenSource();
+        public static string WWW {get;set;}= "http://localhost:8080/"; //82 порт не будет работать потому что на нем WebSocket!
+        public static string XXX {get;set;}= "ws://127.0.0.1:82"; //wss 443
+        public static string YYY {get;set;}= "ws://127.0.0.1:82"; //? будет ли wss 443
+        public static string IP {get;set;}= "127.0.0.1";
+        public static int PORT {get;set;}= 82;
+
+        public static string website = "Server\\WebSite";
+
+        //если 443, то и wss дописать и сертификат надо!
+    };
+
 public class Program
 {
     //public const string path = "Server\\WebSite"; //win
@@ -34,24 +49,12 @@ public class Program
     //     public string HtmlTagClose(Model model) => model == null ? string.Empty : $"</{model.Tag}>";
 
     // }
-    public class Global_ : Global
-    {
-        //public static CancellationTokenSource Token = new CancellationTokenSource();
-        public new string WWW = "http://localhost:8080/"; //82 порт не будет работать потому что на нем WebSocket!
-        public new string XXX = "ws://127.0.0.1:82"; //wss 443
-        public new string YYY = "ws://127.0.0.1:82"; //? будет ли wss 443
-        public new string IP = "127.0.0.1";
-        public new int PORT = 82;
-
-        public string website = "Server\\WebSite";
-
-        //если 443, то и wss дописать и сертификат надо!
-    };
+    
     public class Manager : IManager
     {
         //public List<Model> models = new List<Model>();
         //public List<IService> services = new List<IService>();
-        public Global global { get; set; } = new Global_();
+        //public Global global { get; set; } = new Global_();
         public List<Page> pages = new List<Page>();
         public List<Assembly> assemblies = new List<Assembly>(); //подключение dll
 
@@ -137,7 +140,7 @@ public class Program
     public static volatile bool recompile = true;
     static async Task Main(string[] args)
     {
-        Global_ global = new Global_();
+        //Global_ global = new Global_();
 
         foreach (var a in args)
         {
@@ -145,13 +148,13 @@ public class Program
             string value = a.TrimStart('=');
             switch (parameter)
             {
-                case "-www": global.WWW = value; break;
+                case "-www": Global.WWW = value; break;
                 case "-wss":
-                    global.XXX = global.YYY = value;
-                    global.PORT = int.Parse(value.TrimEnd(':'));
+                    Global.XXX = Global.YYY = value;
+                    Global.PORT = int.Parse(value.TrimEnd(':'));
                     break;
                 case "-website":
-                    global.website = value;
+                    Global.website = value;
                     break;
                 case "-?":
                     Console.WriteLine("Аvailable parameters:\n-www: http server address with port\n-wss: websocket address\n-website: website base directory");
@@ -163,7 +166,7 @@ public class Program
 
         //Tools tools = new Tools();
         Manager manager = new Manager();
-        manager.global = global;
+        //manager.global = global;
 
         Console.WriteLine("\nGRINDER SERVER\nPress ctrl+c to stop");
 
@@ -189,10 +192,10 @@ public class Program
 
         await listener.RunAsync(
                 manager,
-                global.WWW,
-                IPAddress.Parse(global.IP),
-                global.PORT,
-                (manager.global as Global_).website + "\\meta.html",
+                Global.WWW,
+                IPAddress.Parse(Global.IP),
+                Global.PORT,
+                Global.website + "\\meta.html",
                 GlobalToken.Token
                 );
 
@@ -205,7 +208,7 @@ public class Program
     {
         FileSystemWatcher watcher = new FileSystemWatcher();
 
-        watcher.Path = (manager.global as Global_).website;
+        watcher.Path = Global.website;
 
         //// watcher.NotifyFilter = NotifyFilters.LastAccess | NotifyFilters.LastWrite
         ////    | NotifyFilters.FileName | NotifyFilters.DirectoryName;
@@ -268,7 +271,7 @@ public class Program
 
                     Console.WriteLine(AppDomain.CurrentDomain.BaseDirectory);
 
-                    foreach (var f in Directory.GetFiles($"{(manager.global as Global_).website}/dlls/", "*.dll"))//Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..."));
+                    foreach (var f in Directory.GetFiles($"{Global.website}/dlls/", "*.dll"))//Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..."));
                     {
 
                         var x = Assembly.LoadFrom(Path.GetFullPath(f));
@@ -322,7 +325,7 @@ public class Program
                     // }
 
                     manager.pages.Clear();
-                    foreach (var f in Directory.GetFiles($"{(manager.global as Global_).website}/pages/"))
+                    foreach (var f in Directory.GetFiles($"{Global.website}/pages/"))
                     {
                         Script service = CSharpScript.Create(File.ReadAllText(f), options, typeof(Call<Page>), null);
                         service.RunAsync(globals: callpage, catchException: catchException, new CancellationToken()).GetAwaiter().GetResult();
