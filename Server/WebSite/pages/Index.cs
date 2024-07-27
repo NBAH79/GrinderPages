@@ -116,7 +116,7 @@ public class Button : Component
 
 public class IndexPage : Page
 {
-    public string _id { get => "Index"; }
+    public override string _id { get => "Index.html"; }
 
     //public IManager manager;
     public IndexPage(/*IManager manager,*/List<Component> body) : base(body) {
@@ -152,7 +152,8 @@ public void Instance(IManager manager, out Page t)
                     style="position:relative;margin:56px auto 0",
                     height="40px",
                     Content="<a class='bcs white' style='width:100%;height:100%;line-height:38px'>НА СТРАНИЦУ 404</a>",
-                    onclick=(async (__s, __o)=>{return await Task.FromResult($"URL|{manager.global.WWW}Err404.html");})
+                    //onclick=(async (__s, __o)=>{return await Task.FromResult($"URL|{manager.globalWWW}Err404.html");})
+                    onclick=(async (__s, __o)=>{return await Task.FromResult($"URL|Err404.html");})
                     },
                     new Block(manager,"row", "margin:56px auto", new List<Component>() {
                         new Button(manager){

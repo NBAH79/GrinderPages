@@ -31,6 +31,7 @@ public class Instance
 //  };
 public interface IManager
 {
+    public string globalWWW {get;set;}
     //Assembly? GetAssembly(string filename);
     // Type? GetClass(Assembly assembly,string fullname); //лучше для оптимизации
     //Type? GetClass(string shortname,string fullname); //лучше для оптимизации

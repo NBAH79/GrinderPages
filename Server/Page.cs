@@ -13,63 +13,63 @@ namespace Server;
     //однако тут есть название
 
 
-    public class Page
-    {
-        //private string _url = string.Empty;
-        //public string Url { get => _url; }
+    // public class Page
+    // {
+    //     //private string _url = string.Empty;
+    //     //public string Url { get => _url; }
         
-        protected List<Component> body=new List<Component>();
+    //     protected List<Component> body=new List<Component>();
 
-        //public WebPage(WebPage template) {
-        //    //_url=template.Url;
-        //    body = new List<WebComponent>();
-        //    foreach (var x in template.body) this.body.Add(x.Instantiate()); //инстанс
-        //}
+    //     //public WebPage(WebPage template) {
+    //     //    //_url=template.Url;
+    //     //    body = new List<WebComponent>();
+    //     //    foreach (var x in template.body) this.body.Add(x.Instantiate()); //инстанс
+    //     //}
 
-        ////инициализация шаблона
-        //public WebPage()
-        //{
-        //    //_url = url;
-        //    body = new List<WebComponent>();
-        //}
+    //     ////инициализация шаблона
+    //     //public WebPage()
+    //     //{
+    //     //    //_url = url;
+    //     //    body = new List<WebComponent>();
+    //     //}
 
-        //public virtual Task OnInitialize() { return Task.CompletedTask; }
-        //public virtual Task OnParametersSet(Dictionary<string, string> parameters) { return Task.CompletedTask; }
+    //     //public virtual Task OnInitialize() { return Task.CompletedTask; }
+    //     //public virtual Task OnParametersSet(Dictionary<string, string> parameters) { return Task.CompletedTask; }
 
-        public async Task Create(Stream stream, string Url, Dictionary<string, string> parameters)
-        {
-            await OnCreate(stream, Url, parameters);
-            foreach (var x in body) await x.Create(stream);
-            await Task.CompletedTask;
-        }
-        public async Task Render(Stream stream, string Url, bool refresh, Dictionary<string, string> parameters)
-        {
-            await OnRender(stream, Url, refresh, parameters);
-            //PageNotFoundText.Content = $"Страница <span class='red'>{Url}</span> не найдена!";
-            foreach (var x in body) await x.Render(stream, refresh);
-            await Task.CompletedTask;
-        }
+    //     public async Task Create(Stream stream, string Url, Dictionary<string, string> parameters)
+    //     {
+    //         await OnCreate(stream, Url, parameters);
+    //         foreach (var x in body) await x.Create(stream);
+    //         await Task.CompletedTask;
+    //     }
+    //     public async Task Render(Stream stream, string Url, bool refresh, Dictionary<string, string> parameters)
+    //     {
+    //         await OnRender(stream, Url, refresh, parameters);
+    //         //PageNotFoundText.Content = $"Страница <span class='red'>{Url}</span> не найдена!";
+    //         foreach (var x in body) await x.Render(stream, refresh);
+    //         await Task.CompletedTask;
+    //     }
 
-        public async Task Event(Stream stream, string[] operands)
-        {
-            await OnEvent(stream,operands);
-            foreach (var x in body) await x.Event(stream, operands);
-            await Task.CompletedTask;
-        }
+    //     public async Task Event(Stream stream, string[] operands)
+    //     {
+    //         await OnEvent(stream,operands);
+    //         foreach (var x in body) await x.Event(stream, operands);
+    //         await Task.CompletedTask;
+    //     }
 
-        //public async Task Update()
-        //{
-        //    await OnUpdate();
-        //    foreach (var x in body) await x.Update();
-        //    await Task.CompletedTask;
-        //}
-        public virtual Task OnCreate(Stream stream, string Url, Dictionary<string, string> parameters) { return Task.CompletedTask; }
-        public virtual Task OnRender(Stream stream, string Url, bool refresh, Dictionary<string, string> parameters) { return Task.CompletedTask; }
+    //     //public async Task Update()
+    //     //{
+    //     //    await OnUpdate();
+    //     //    foreach (var x in body) await x.Update();
+    //     //    await Task.CompletedTask;
+    //     //}
+    //     public virtual Task OnCreate(Stream stream, string Url, Dictionary<string, string> parameters) { return Task.CompletedTask; }
+    //     public virtual Task OnRender(Stream stream, string Url, bool refresh, Dictionary<string, string> parameters) { return Task.CompletedTask; }
 
-        public virtual Task OnEvent(Stream stream, string[] operands) { return Task.CompletedTask; }
+    //     public virtual Task OnEvent(Stream stream, string[] operands) { return Task.CompletedTask; }
 
-        public virtual Task OnUpdate() { return Task.CompletedTask; }
-    }
+    //     public virtual Task OnUpdate() { return Task.CompletedTask; }
+    // }
     
     // public class IndexTemplate : Page
     // {

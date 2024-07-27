@@ -9,10 +9,10 @@ namespace Server;
 
     public class Session
     {
-        public Page? page;
+        public Grinder.Page? page;
         public TcpClient client=new ();
 
-        public Session(TcpClient client, Page? template)
+        public Session(TcpClient client, Grinder.Page? template)
         {
             this.client = client;
             this.page = null;

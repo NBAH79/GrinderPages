@@ -4,7 +4,7 @@ public abstract class Component
 {
     public List<Component> children = new List<Component>();
     public string Id = string.Empty;
-    public string Tag = string.Empty;
+    public string Tag = "div"; 
     public string Class = string.Empty;
     public string Style = string.Empty;
     public string Content = string.Empty;

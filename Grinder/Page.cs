@@ -2,7 +2,7 @@
 
 public abstract class Page
 {
-    public string _id { get; }
+    public abstract string _id { get; }
     public List<Component> body = new List<Component>();
     public Page(List<Component> body) { this.body = body; }
 
