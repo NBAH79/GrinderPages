@@ -1,10 +1,11 @@
-﻿namespace Grinder;
+﻿using System.Dynamic;
+
+namespace Grinder;
 
 public abstract class Page
 {
     public abstract string _id { get; }
-    public List<Component> body = new List<Component>();
-    public Page(List<Component> body) { this.body = body; }
+    public List<Component> body {get;set;} = new List<Component>();
 
     public async Task Create(Stream stream, string Url, Dictionary<string, string> parameters)
     {

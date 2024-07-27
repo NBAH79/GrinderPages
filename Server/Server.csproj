@@ -16,10 +16,12 @@
     <None Remove="WebSite\host.html" />
     <None Include="WebSite\components\Container.cs" />
     <None Include="website\pages\Index.cs" />
+    <None Include="website\pages\Err404.cs" />
   </ItemGroup>
   <ItemGroup>
     <Compile Remove="WebSite\components\Container.cs" />
     <Compile Remove="website\pages\Index.cs" />
+    <Compile Remove="website\pages\Err404.cs" />
   </ItemGroup>
 
   <ItemGroup>

@@ -114,12 +114,12 @@ public class Button : Component
 //     //}
 // }
 
-public class IndexPage : Page
+public class Err404Page : Page
 {
-    public override string _id { get => "Index.html"; }
+    public override string _id { get => "Err404.html"; }
 
-    public Text ResultText;// = new Text(manager,"t14 cg87", "", "");// = new Text("t14 cg87", "", "Страница не найдена!");
-    public Block BlockWithText;
+    public Text PageNotFoundText;// = new Text(manager,"t14 cg87", "", "");// = new Text("t14 cg87", "", "Страница не найдена!");
+    //public Block BlockWithText;
 
     
 }
@@ -132,54 +132,27 @@ public void Instance(IManager manager, out Page t)
 
     //Console.WriteLine(id.ToString());
     //Console.WriteLine(model?.ToString());
-    var ret = new IndexPage();
+    
+    var ret = new Err404Page();
+    //ret.BlockWithText=new Block(manager,"","",new List<Component>());
+    //ret.PageNotFoundText=new Text(manager,"t14 cg87", "", "");
 
-    ret.BlockWithText=new Block(manager,"","",new List<Component>());
-    ret.ResultText=new Text(manager,"t14 cg87", "", "");
     ret.body = new List<Component>(){
-        new Frame(manager, "_white", "margin:24px;padding:12px;height:100%;width:auto",new List<Component>() {
-
-            {ret.BlockWithText=new Block(manager,"col", "margin:auto", new List<Component>() {
-                new Text(manager,"t24 cg87","margin-bottom:8px","Главная страница"),
-
-                new Button(manager){
-                    Class="sb",
-                    style="position:relative;margin:56px auto 0",
-                    height="40px",
-                    Content="<a class='bcs white' style='width:100%;height:100%;line-height:38px'>НА СТРАНИЦУ 404</a>",
-                    //onclick=(async (__s, __o)=>{return await Task.FromResult($"URL|{manager.globalWWW}Err404.html");})
-                    onclick=(async (__s, __o)=>{return await Task.FromResult($"URL|{manager.globalWWW}Err404.html");})
-                    },
-                    new Block(manager,"row", "margin:56px auto", new List<Component>() {
-                        new Button(manager){
-                            Class="wb",
-                            style="margin:8px",
-                            height="40px",
-                            Content="<a class='bws custom' style='width:100%;height:100%;line-height:38px'>АПЕЛЬСИНЫ</a>",
-                            onclick=(async (__s, __o)=>{
-                                ret.ResultText.SetText("АПЕЛЬСИНЫ КРУГЛЫЕ ОРАНЖЕВЫЕ КРУПНЫЕ");
-                                await ret.ResultText.Render(__s,true, ret.BlockWithText);
-                                return await Task.FromResult("");
-                            })
-                        },
-                        new Button(manager){
-                            Class="wb",
-                            style="margin:8px",
-                            height="40px",
-                            Content="<a class='bws custom' style='width:100%;height:100%;line-height:38px'>ЯБЛОКИ</a>",
-                            onclick=(async (__s,__o)=>{
-                                ret.ResultText.SetText("ЯБЛОКИ КРУГЛЫЕ КРАСНЫЕ МАЛЕНЬКИЕ");
-                                await ret.ResultText.Render(__s,true, ret.BlockWithText);
-                                return await Task.FromResult("");
-                                /*return await Task.FromResult("UPD| ");*/})
+            new Frame(manager,"_white", "margin:24px;padding:12px;height:100%;width:auto",new List<Component>() {
+                new Block(manager,"col", "margin:auto", new List<Component>() {
+                    new Text(manager,"t24 red","margin-bottom:8px; filter: drop-shadow(1px 1px 1px #FFFFF0) drop-shadow(-1px -1px 1px #A0A0AF)","Error404"),
+                    { ret.PageNotFoundText = new Text(manager,"t14 cg87", "", "Страница не найдена!") },
+                    new Button(manager){
+                        Class="rb",
+                        style="margin:56px auto 0",
+                        height="40px",
+                        Content="<a class='bcs white' style='width:100%;height:100%;line-height:38px;'>НА ГЛАВНУЮ</a>",
+                        onclick=(async (__s,__o)=>{return await Task.FromResult($"URL|{manager.globalWWW}Index.html"); })
                         }
-                    }),
-                { ret.ResultText },
+                    })
+                })
 
-            }) 
-            }
-        })
-    };
+            };
     t=ret;
 }
 

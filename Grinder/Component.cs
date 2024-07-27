@@ -15,7 +15,7 @@ public abstract class Component
 
     protected int hash = 0;
 
-    private IManager manager;
+    protected IManager manager;
 
     public Component(IManager manager)
     {
