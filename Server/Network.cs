@@ -27,7 +27,7 @@ namespace Server
 
     public static class CONST
     {
-        public const string HOST="host.html";
+        //public const string HOST="host.html";
         public const int BUFFERSIZE = 0x1000; //максимальны размер буффера чтения потоковых данных 
         public const int PINGSIZE = 12;
         public const int PINGMSGSIZE = 10;
