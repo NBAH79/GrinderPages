@@ -57,17 +57,20 @@ public class Button : Component
     public string style { get; set; } = "position:relative;margin:56px auto 0";
 
     public int position = 0;
+    public bool moveable=false;
     public EventResult onclick { get; set; } = (async (__s, __o) => { return await Task.FromResult("UPD|"); });
 
-    public Button(IManager manager):base(manager){
+    public Button(IManager manager,bool move):base(manager){
         Events.Clear();
         Events.Add("click:3");
+        moveable=move;
     }
 
     public override async Task OnUpdate()
     {
         //Tag = "div";
         //Class = "wb";
+        if (moveable)  
         position += 50;
         //left = $"{position}px";
         if (position > 300) position = 0;
@@ -142,16 +145,16 @@ public void Instance(IManager manager, out Page t)
             {ret.BlockWithText=new Block(manager,"col", "margin:auto", new List<Component>() {
                 new Text(manager,"t24 cg87","margin-bottom:8px","Главная страница"),
 
-                new Button(manager){
+                new Button(manager,true){
                     Class="sb",
                     style="position:relative;margin:56px auto 0",
                     height="40px",
                     Content="<a class='bcs white' style='width:100%;height:100%;line-height:38px'>НА СТРАНИЦУ 404</a>",
                     //onclick=(async (__s, __o)=>{return await Task.FromResult($"URL|{manager.globalWWW}Err404.html");})
-                    onclick=(async (__s, __o)=>{return await Task.FromResult($"URL|{manager.globalWWW}Err404.html");})
+                    onclick=(async (__s, __o)=>{return await Task.FromResult($"URL|Err404.html");})
                     },
                     new Block(manager,"row", "margin:56px auto", new List<Component>() {
-                        new Button(manager){
+                        new Button(manager,false){
                             Class="wb",
                             style="margin:8px",
                             height="40px",
@@ -162,7 +165,7 @@ public void Instance(IManager manager, out Page t)
                                 return await Task.FromResult("");
                             })
                         },
-                        new Button(manager){
+                        new Button(manager,false){
                             Class="wb",
                             style="margin:8px",
                             height="40px",

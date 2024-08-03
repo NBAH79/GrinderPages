@@ -147,7 +147,8 @@ public void Instance(IManager manager, out Page t)
                         style="margin:56px auto 0",
                         height="40px",
                         Content="<a class='bcs white' style='width:100%;height:100%;line-height:38px;'>НА ГЛАВНУЮ</a>",
-                        onclick=(async (__s,__o)=>{return await Task.FromResult($"URL|{manager.globalWWW}Index.html"); })
+                        //onclick=(async (__s,__o)=>{return await Task.FromResult($"URL|{manager.globalWWW}Index.html"); })
+                        onclick=(async (__s,__o)=>{return await Task.FromResult($"URL|Index.html"); })
                         }
                     })
                 })

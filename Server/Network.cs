@@ -650,10 +650,26 @@ namespace Server
         public static async Task SendText(Stream stream, string text)
         {
             if (string.IsNullOrEmpty(text)) return;
-            byte[] data = Encoding.UTF8.GetBytes(text);
-            byte[] header = Header(129, (ulong)data.Length);
-            await stream.WriteAsync(header);
-            await stream.WriteAsync(data);
+            try {
+                byte[] data = Encoding.UTF8.GetBytes(text);
+                byte[] header = Header(129, (ulong)data.Length);
+                await stream.WriteAsync(header);
+                await stream.WriteAsync(data);
+            } 
+            catch (IOException ioEx)
+            {
+     
+            }
+            catch (Exception ex)
+            {
+     
+            }
+            //Тут бывает при закрытии страницы:
+            //"Unable to write data to the transport connection: 
+            //An established connection was aborted by the software in your host machine.."
+            //- значит просто ConnectionAborted.
+            //Потому что там закрыли, а тут еще не ясно это. Но может быть еще таймаут.
+            //opcode Close после этого срабатывает штатно и убивает сессию.
         }
 
 

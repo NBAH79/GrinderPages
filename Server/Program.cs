@@ -454,7 +454,7 @@ public class Program
                 var _operands = _url.Split('?');
                 var _location = _operands[0];
                 //if (string.Compare(_location, Global.WWW) == 0) _location = Global.WWW + "Index.html";
-                if (string.Compare(_location, Global.WWW) == 0) _location = "Index.html";
+                if (string.IsNullOrEmpty(_location) || string.Compare(_location, Global.WWW) == 0) _location = "Index.html";
                 var _parameters = (operands.Length > 1) ? operands[1] : "";
 
                 //if (_location==CurrentPage.Url) await Task.FromResult(true); //а может рефреш?
