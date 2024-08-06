@@ -70,7 +70,7 @@ public class Button : Component
     {
         //Tag = "div";
         //Class = "wb";
-        if (moveable)  
+        //if (moveable)  
         position += 50;
         //left = $"{position}px";
         if (position > 300) position = 0;
