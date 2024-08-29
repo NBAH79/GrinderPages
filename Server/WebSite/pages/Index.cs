@@ -171,7 +171,7 @@ public void Instance(IManager manager, out Page t)
                             height="40px",
                             Content="<a class='bws custom' style='width:100%;height:100%;line-height:38px'>ЯБЛОКИ</a>",
                             onclick=(async (__s,__o)=>{
-                                ret.ResultText.SetText("ЯБЛОКИ КРУГЛЫЕ КРАСНЫЕ МАЛЕНЬКИЕ");
+                                ret.ResultText.SetText("ЯБЛОКИ КРУГЛЫЕ КРАСНЫЕ ОЧЕНЬ МАЛЕНЬКИЕ");
                                 await ret.ResultText.Render(__s,true, ret.BlockWithText);
                                 return await Task.FromResult("");
                                 /*return await Task.FromResult("UPD| ");*/})

@@ -1,10 +1,14 @@
 ﻿using System.Net;
+using System.Net.NetworkInformation;
 using System.Net.Sockets;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
 using Grinder;
+using Rest;
 
 
 namespace Server
@@ -69,7 +73,7 @@ namespace Server
         public bool LastFrame { get => position == length; } //а у последнего позиция на 100%, иначе 100% прогрессбары не покажут
     }
 
- 
+
 
     public class ServiceManager
     {
@@ -78,7 +82,7 @@ namespace Server
         public delegate Task ParserLson(Session session, string text);
         public delegate Task ParserUpdate(Session session);
 
-        public event ParserData OnData = ((a,b)=>Task.CompletedTask);
+        public event ParserData OnData = ((a, b) => Task.CompletedTask);
         public event ParserPong OnPong = ((a, b, c) => Task.CompletedTask);
         public event ParserLson OnLson = ((a, b) => Task.CompletedTask);
         public event ParserUpdate OnUpdate = ((a) => Task.CompletedTask);
@@ -91,14 +95,15 @@ namespace Server
 
     public class Listener
     {
-        public ServiceManager parser =new ();
+        public ServiceManager parser = new();
         private string ApplicationPath = "";
         private string TemporalPath = "";
         private int Hash_zip = new string("zip").GetHashCode();
         private int Hash_html = new string("html").GetHashCode();
-        
+
 
         private static byte[] Host = new byte[0];
+        private static string meta;
         //private static string framework_h = "<script src='grinder.server.js'></script>\r\n";
         //private static string framework_b = $"<script>document.addEventListener('DOMContentLoaded', Start('{Global.YYY}'));</script>\r\n";
         //private static string host = $"<!doctype html><html lang='en'><script src='framework/grinder.server.js'></script><head><title>Grinder Pages</title></head><body><h2>Using default page!</h2></body><script>document.addEventListener('DOMContentLoaded', Start('{Global.YYY}'));</script></html>";
@@ -115,19 +120,20 @@ namespace Server
         {
             ApplicationPath = Directory.GetCurrentDirectory();
             TemporalPath = Path.GetTempPath();
-            var meta=File.ReadAllText(metafile, Encoding.UTF8);
-            Host = Encoding.UTF8.GetBytes($@"
-<!doctype html>
-<html lang='en'>
-    <head>
-        {meta}
-        <script src='js/grinder.server.js'></script>
-        <script type=""text/javascript"">
-            server.init(['{Global.YYY}','URL']);
-        </script>
-    </head>
-    <body></body>
-</html>");
+            meta = File.ReadAllText(metafile, Encoding.UTF8);
+
+            //          Host = Encoding.UTF8.GetBytes($@"
+            // <!doctype html>
+            // <html lang='en'>
+            //     <head>
+            //         {meta}
+            //         <script src='js/grinder.server.js'></script>
+            //         <script type=""text/javascript"">
+            //             server.init(['{Global.YYY}','URL']);
+            //         </script>
+            //     </head>
+            //     <body></body>
+            // </html>");
             //foreach (var n in FindAllHtmlFiles(path)) pages.Add(("/"+Path.GetFileName(n), ProcessPage(n)));
             //var _host=ProcessPage(File.ReadAllText(CONST.HOST, Encoding.UTF8));
             //if (host!=string.Empty) host=_host; 
@@ -154,16 +160,30 @@ namespace Server
             //Console.WriteLine($"Request: {context.Request.RawUrl}");
             var url = context.Request.RawUrl;
 
+            if (context.Request.HttpMethod == "POST")
+            {
+                var request = context.Request;
+                string body;
+                using (var reader = new StreamReader(request.InputStream, request.ContentEncoding))
+                {
+                    body = reader.ReadToEnd();
+                }
+                await Api(url, context.Request.Headers, body, context.Response);
+                return "";
+            }
+
             //это здесь потому что часто запрашивается
-            if (string.IsNullOrEmpty(url) || url == "/") {
+            if (string.IsNullOrEmpty(url) || url == "/")
+            {
                 await Answer("/index.html", context.Response);
                 return "/";
             }
 
             //всегда слать одну и ту же страницу, а потом ориентироваться по названию
-            var param=url.Split('?');
+            var param = url.Split('?');
             var hash = param[0][(url.LastIndexOf('.') + 1)..].GetHashCode();
-            if (hash == Hash_html) {
+            if (hash == Hash_html)
+            {
                 await Answer(url, context.Response);
                 return url;
             }
@@ -173,7 +193,7 @@ namespace Server
             if (url.StartsWith("_")) path = TemporalPath + url; //только ничего там лишнего не должно быть!
             else path = ApplicationPath + url;
 
-            
+
 
             //Скачка больших файлов в Загрузки. Можно устраивать временные линки, надо ли?
             //Можно использовать temp Path.GetTempPath(); подменить
@@ -222,8 +242,8 @@ namespace Server
             return null;
         }
 
-        //проверено 231128
-        public async Task Answer( string url, HttpListenerResponse response)
+        //обновлено 240827 //проверено 231128
+        public async Task Answer(string url, HttpListenerResponse response)
         {
             //все подряд страницы мы не показываем, а только те что заданы изначально (безопасность)
             //var elem = pages.Find(x => string.Compare(x.name, url,true) == 0);
@@ -235,13 +255,122 @@ namespace Server
             //}
             //else
             //{
-                
-                //byte[] buffer = Encoding.UTF8.GetBytes(Host);//elem.content);
-                response.ContentLength64 = Host.LongLength;
-                using Stream output = response.OutputStream;
-                await output.WriteAsync(Host);
-                await output.FlushAsync();
+
+            //byte[] buffer = Encoding.UTF8.GetBytes(Host);//elem.content);
+
+
+            int x=0;
+            if (Global.MODE == Global.Mode.balancer)
+            {
+                lock (Global.nodes)
+                {
+                    var n=Global.nodes.OrderBy(o=>o.Sessions).ToList();
+                    x=n[1].id;
+                }
+            } //или нулевой
+            Host = Encoding.UTF8.GetBytes($@"
+<!doctype html>
+<html lang='en'>
+    <head>
+        {meta}
+        <script src='js/grinder.server.js'></script>
+        <script type=""text/javascript"">
+            server.init(['{Global.nodes[x].YYY}','URL']);
+        </script>
+    </head>
+    <body></body>
+</html>");
+
+
+            response.ContentLength64 = Host.LongLength;
+            using Stream output = response.OutputStream;
+            await output.WriteAsync(Host);
+            await output.FlushAsync();
             //}
+        }
+
+        public async Task Api(string? url, System.Collections.Specialized.NameValueCollection headers, string body, HttpListenerResponse response)
+        {
+            Node? node = JsonSerializer.Deserialize<Node>(body);
+            string message = "";
+            HttpStatusCode status = HttpStatusCode.OK;
+            if (node == null)
+            {
+                status = HttpStatusCode.BadRequest;
+            }
+            else
+            {
+                switch (node.status)
+                {
+                    case Rest.Status.update:
+                        {
+                            lock (Global.nodes)
+                            {
+                                Global.nodes[node.id] = node;
+                            }
+                        }
+                        break;
+                    case Rest.Status.register:
+                        {
+                            lock (Global.nodes)
+                            {
+                                var x = Global.nodes.Find(x => x.uid == node.uid);
+                                if (x == null)
+                                {
+                                    node.id = Global.nodes.Count;
+                                    Global.nodes.Add(node);
+                                    message = JsonSerializer.Serialize<NodeResponse>(new NodeResponse { id = node.id });
+                                }
+                                else
+                                {
+                                    x.status = Status.register;
+                                    message = JsonSerializer.Serialize<NodeResponse>(new NodeResponse { id = x.id });
+                                }
+                                status = HttpStatusCode.Created;
+                            }
+                        }
+                        break;
+                    case Rest.Status.unregister:
+                        {
+                            lock (Global.nodes)
+                            {
+                                Global.nodes[node.id].status = Status.offline;
+                                status = HttpStatusCode.NoContent;
+                                message = JsonSerializer.Serialize<NodeResponse>(new NodeResponse { id = 0 });
+                            }
+                        }
+                        break;
+                    default: break;
+                }
+            }
+
+            //var text=$"OK {body}";
+            //System.Collections.Specialized.NameValueCollection headers = response.Headers;
+            //text += headers.AllKeys.Length;
+            //text += headers.TryGetValue("User-Agent", out var userAgent);
+
+
+            // foreach (string? key in headers.AllKeys)
+            // {
+            //     string[] values = headers.GetValues(key);
+            //     if (values?.Length > 0)
+            //     {
+            //         text+=$"\r\n{key}:";
+            //         foreach (string value in values)
+            //         {
+            //             text+=$"{value};";
+            //         }
+            //     }
+            // }
+
+            var answer = Encoding.UTF8.GetBytes(message);
+            response.ContentLength64 = answer.LongLength;
+            response.StatusCode = (int)status;
+            response.KeepAlive = false;
+            //response.Headers.Add("Error", "101");
+            using Stream output = response.OutputStream;
+            await output.WriteAsync(answer);
+            await output.FlushAsync();
         }
 
         //проверено 231128
@@ -276,11 +405,11 @@ namespace Server
             }
         }
 
-        public async Task RunAsync(IManager manager,string webaddress, IPAddress ipaddress, int port, string meta, CancellationToken token)
+        public async Task RunAsync(IManager manager, string webaddress, IPAddress ipaddress, int port, string meta, Global.Mode mode, CancellationToken token)
         {
             var listener = new TcpListener(ipaddress, port);
 
-            using (var server = Initialize(manager,webaddress,meta))
+            using (var server = Initialize(manager, webaddress, meta))
             {
 
                 //while (true) { //для дебага однопоток
@@ -302,16 +431,19 @@ namespace Server
                     server.Stop();
                 }, TaskCreationOptions.LongRunning);
                 //}
+
                 listener.Start();
+                //if (Global.MODE== Global.Mode.node){
                 while (!token.IsCancellationRequested)
                 {
                     try //сессия не должна класть сервер
                     {
 
                         var client = await listener.AcceptTcpClientAsync(token);
+                        //Global.nodes[0].Sessions++;
                         _ = Task.Factory.StartNew(async () =>
                         {
-                            if (await HandShake(client, token)) await Node(new Session(client,null), parser, token);
+                            if (await HandShake(client, token)) await Node(new Session(client, null), parser, token);
                         }, TaskCreationOptions.LongRunning);
                         //if (await HandShake(client, token)) await Node(new WebSession(client,null), parser, token); //для дебага однопоток
                     }
@@ -322,7 +454,9 @@ namespace Server
                     }
                     catch (OperationCanceledException) { };
                 }
+                //}
                 //server.Close();
+
             }
             //socket.Close();  
             listener.Stop();
@@ -404,7 +538,7 @@ namespace Server
             return false;
         }
 
-        public async Task PageUpdate(Session session, ServiceManager parser, CancellationToken token, bool delay) 
+        public async Task PageUpdate(Session session, ServiceManager parser, CancellationToken token, bool delay)
         {
             //NetworkStream stream = client.GetStream();
             if (delay) await Task.Delay(CONST.UPDATEDELAY);
@@ -424,7 +558,7 @@ namespace Server
         {
             Console.WriteLine("The session started.");
             NetworkStream stream = session.client.GetStream();
-            CancellationTokenSource updateToken= CancellationTokenSource.CreateLinkedTokenSource(token);
+            CancellationTokenSource updateToken = CancellationTokenSource.CreateLinkedTokenSource(token);
             //оно само переписывается opcode
             //int offset=0;
             //ulong length = 0;
@@ -433,8 +567,8 @@ namespace Server
             byte[] masks = new byte[4];
 
             //update task отложен, с промежутком, в случае отмены запуск заново отложен
-            var update= Task.Factory.StartNew(()=> PageUpdate(session, parser, updateToken.Token, true));
-
+            var update = Task.Factory.StartNew(() => PageUpdate(session, parser, updateToken.Token, true));
+Global.nodes[0].Sessions++;
             while (session.client.Connected && !token.IsCancellationRequested)
             {
                 if (ping++ == CONST.PINGINTERVAL) { await SendPing(stream, id++); ping = 0; }
@@ -515,9 +649,9 @@ namespace Server
                             //msg.position += (ulong)read;
                             //if (msg.LastFrame) msg.opcode += 128; //fin
                             await parser.ParseLson(session, Encoding.UTF8.GetString(Decode(masks, buffer, read)));// Decode(masks, buffer, read), code, position, length)) return 0; //закрытие сессии
-                                                                                                                 ////code=0;
-                                                                                                                 //opcode = 0; //0 значит продолжение данных, как в самом вебсокет
-                                                                                                                 //}
+                                                                                                                  ////code=0;
+                                                                                                                  //opcode = 0; //0 значит продолжение данных, как в самом вебсокет
+                                                                                                                  //}
                         }
                         break;
                     //дополнительно режим передачи данных
@@ -557,8 +691,8 @@ namespace Server
                                 //тут можно проконтролить передачу данных
                                 //чтото =
                                 await parser.ParseData(session, transfer);// Decode(masks, buffer, read), code, position, length)) return 0; //закрытие сессии
-                                                                         ////code=0;
-                                                                         //opcode = 0; //0 значит продолжение данных, как в самом вебсокет
+                                                                          ////code=0;
+                                                                          //opcode = 0; //0 значит продолжение данных, как в самом вебсокет
                             }
                         }
                         break;
@@ -576,6 +710,7 @@ namespace Server
                 TimeSpan delta = end - start;
                 Console.WriteLine($"R:{delta}");
             }
+            Global.nodes[0].Sessions--;
             return 0;
         }
 
@@ -642,7 +777,7 @@ namespace Server
             return raw;
         }
 
-        
+
 
         //предполагается отправка кусочка за раз
         //если это что то готовое то нет лимита на размер - оно всё равно сгенерится в памяти сервера
@@ -650,19 +785,20 @@ namespace Server
         public static async Task SendText(Stream stream, string text)
         {
             if (string.IsNullOrEmpty(text)) return;
-            try {
+            try
+            {
                 byte[] data = Encoding.UTF8.GetBytes(text);
                 byte[] header = Header(129, (ulong)data.Length);
                 await stream.WriteAsync(header);
                 await stream.WriteAsync(data);
-            } 
+            }
             catch (IOException ioEx)
             {
-     
+
             }
             catch (Exception ex)
             {
-     
+
             }
             //Тут бывает при закрытии страницы:
             //"Unable to write data to the transport connection: 
@@ -731,7 +867,7 @@ namespace Server
         //утилиты =====================================================================================================
         #region utilities
 
-        
+
 
         public async Task CopyStream(Stream input, Stream output, Progress onProgress, CancellationToken token = default)
         {

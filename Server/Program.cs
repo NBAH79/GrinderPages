@@ -20,21 +20,42 @@ using Microsoft.CodeAnalysis;
 using System.Runtime.InteropServices;
 using System.Diagnostics;
 using Server;
-
+using System.Threading.Tasks;
+using Rest;
+using System.Net.Http.Headers;
+using System.Text;
+using System.Text.Json;
+using System.Net.Http.Json;
 
 public static class Global
+{
+    public enum Mode : int
     {
-        //public static CancellationTokenSource Token = new CancellationTokenSource();
-        public static string WWW {get;set;}= "http://localhost:8080/"; //82 порт не будет работать потому что на нем WebSocket!
-        public static string XXX {get;set;}= "ws://127.0.0.1:82"; //wss 443
-        public static string YYY {get;set;}= "ws://127.0.0.1:82"; //? будет ли wss 443
-        public static string IP {get;set;}= "127.0.0.1";
-        public static int PORT {get;set;}= 82;
+        balancer = 1, node = 2, combined = 3,
+    }
 
-        public static string website = "Server\\WebSite";
 
-        //если 443, то и wss дописать и сертификат надо!
-    };
+
+    //public static CancellationTokenSource Token = new CancellationTokenSource();
+    public static string WWW { get; set; } = "http://localhost:8080/"; //82 порт не будет работать потому что на нем WebSocket!
+    public static string XXX { get; set; } = "ws://127.0.0.1:82"; //wss 443
+    public static string YYY { get; set; } = "ws://127.0.0.1:82"; //? будет ли wss 443
+    public static string IP { get; set; } = "127.0.0.1";
+    public static int PORT { get; set; } = 82;
+    public static Mode MODE { get; set; } = Mode.combined;
+
+    public const int TIMEOUT = 1000; //1 минута обновления статистики
+
+    public static string BALANCER { get; set; } = WWW;
+    public static string WebSiteDirectory = "Server\\WebSite";
+
+    public static List<Rest.Node> nodes = new List<Rest.Node>();
+
+    public static int priority=1000;
+
+    //если 443, то и wss дописать и сертификат надо!
+};
+
 
 public class Program
 {
@@ -50,14 +71,14 @@ public class Program
     //     public string HtmlTagClose(Model model) => model == null ? string.Empty : $"</{model.Tag}>";
 
     // }
-    
+
     public class Manager : IManager
     {
         //public List<Model> models = new List<Model>();
         //public List<IService> services = new List<IService>();
         //public Global global { get; set; } = new Global_();
-        public string globalWWW {get;set;}
-        public Listener listener {get;set;}=new Listener();
+        public string globalWWW { get; set; }
+        public Listener listener { get; set; } = new Listener();
         public List<Page> pages = new List<Page>();
         public List<Assembly> assemblies = new List<Assembly>(); //подключение dll
 
@@ -110,8 +131,11 @@ public class Program
         //public MethodInfo? GetMethod(string fullobjectname,string name){return new MethodInfo();}
 
         //Item i = System.Activator.CreateInstance<Item>(obj);
-        public async Task SendText(Stream stream, string text) { await Listener.SendText(stream,text); 
-        /*Console.Write("OUTPUT:" + text); await Task.CompletedTask;*/ }
+        public async Task SendText(Stream stream, string text)
+        {
+            await Listener.SendText(stream, text);
+            /*Console.Write("OUTPUT:" + text); await Task.CompletedTask;*/
+        }
     }
 
 
@@ -148,31 +172,55 @@ public class Program
 
         foreach (var a in args)
         {
-            string parameter = a.TrimEnd('=');
-            string value = a.TrimStart('=');
-            switch (parameter)
+            string[] subs = a.Split('=');
+            if (subs.Count()==0) Console.WriteLine($"Incorrect parameter in {a}");
+            //string parameter = a.TrimEnd('=');
+            //string value = a.TrimStart('=');
+            //Console.WriteLine(subs);
+            switch (subs[0])
             {
-                case "-www": Global.WWW = value; break;
-                case "-wss":
-                    Global.XXX = Global.YYY = value;
-                    Global.PORT = int.Parse(value.TrimEnd(':'));
+                case string x when x.StartsWith("-www"): Global.WWW = subs[1]; break;
+                case string x when x.StartsWith("-wss"):
+                    Global.XXX = Global.YYY = subs[1];
+                    string[] subs2 = a.Split(':');
+                    if (subs2.Count()>1)  Global.PORT = int.Parse(subs2[2]);
                     break;
-                case "-website":
-                    Global.website = value;
+                case string x when x.StartsWith("-port"):
+                     Global.PORT = int.Parse(subs[1]);
+                     break;
+                case string x when x.StartsWith("-website"):
+                    Global.WebSiteDirectory = subs[1];
                     break;
-                case "-?":
-                    Console.WriteLine("Аvailable parameters:\n-www: http server address with port\n-wss: websocket address\n-website: website base directory");
+                case string x when x.StartsWith("-?"):
+                    Console.WriteLine("Аvailable parameters:\n-www: http server address with port\n-wss: websocket address\n-port: socket port\n-website: website base directory");
                     Console.WriteLine("Еxample: server.exe -www=http://localhost:8080/ -wss=ws://127.0.0.1:82 -website=Server\\WebSite");
                     break;
-                default: Console.WriteLine($"bad parameter:{parameter}\ntype -? for help"); break;
+                case string x when x.StartsWith("-combined"):
+                    Global.MODE = Global.Mode.combined;
+                    break;
+                case string x when x.StartsWith("-balancer"):
+                    Global.MODE = Global.Mode.balancer;
+                    break;
+                case string x when x.StartsWith("-server"):
+                    Global.MODE = Global.Mode.node;
+                    break;
+                case string x when x.StartsWith("-priority"):
+                    Global.priority = int.Parse(subs[1]);
+                    break;
+                // case "-name":
+                //     Global.node.Name = value;
+                //     break;
+                default: Console.WriteLine($"bad parameter:{a}\ntype -? for help"); break;
             };
         }
 
         //Tools tools = new Tools();
         Manager manager = new Manager();
-        manager.globalWWW=Global.WWW;
+        manager.globalWWW = Global.WWW;
         //manager.global = global;
 
+        Global.nodes.Add(new Node {status=Rest.Status.register,YYY=Global.YYY,priority=Global.priority,uid=Guid.NewGuid()}); //нулевой всегда локальный даже если режим не комбинированный
+        
         Console.WriteLine("\nGRINDER SERVER\nPress ctrl+c to stop");
 
         //var d=File.CreateText("_path");
@@ -188,26 +236,106 @@ public class Program
         //Console.WriteLine(">>> READY <<<");
         //Server.Listener listener = new Server.Listener();
         //manager.listener=listener;
+        var taskServer = Task.CompletedTask;
+        if (Global.MODE == Global.Mode.node || Global.MODE == Global.Mode.combined)
+        {
+            manager.listener.RegisterService(new PongService(manager));
+            manager.listener.RegisterService(new EchoService(manager));
+            manager.listener.RegisterService(new EventService(manager));
+            manager.listener.RegisterService(new UrlService(manager));
 
-        manager.listener.RegisterService(new PongService(manager));
-        manager.listener.RegisterService(new EchoService(manager));
-        manager.listener.RegisterService(new EventService(manager));
-        manager.listener.RegisterService(new UrlService(manager));
+            //server
+            taskServer = Task.Factory.StartNew(async () => await Rebuild(manager));
+            //Console.WriteLine(">>> FINISHED <<<");
+        }
 
-        var taskListener = Task.Factory.StartNew(async () => await Rebuild(manager));
-        //Console.WriteLine(">>> FINISHED <<<");
+        var taskBalancer = Task.CompletedTask;
+        //if (Global.MODE == Global.Mode.balancer || Global.MODE == Global.Mode.combined)
+        //{
+            taskBalancer = Task.Factory.StartNew(async () => await manager.listener.RunAsync(
+                    manager,
+                    Global.WWW,
+                    IPAddress.Parse(Global.IP),
+                    Global.PORT,
+                    Global.WebSiteDirectory + "\\meta.html",
+                    Global.MODE,
+                    GlobalToken.Token
+                    ));
 
-        await manager.listener.RunAsync(
-                manager,
-                Global.WWW,
-                IPAddress.Parse(Global.IP),
-                Global.PORT,
-                Global.website + "\\meta.html",
-                GlobalToken.Token
-                );
+        //}
+
+        // var context = listener.GetContext();
+        // var request = context.Request;
+        // string text;
+        // using (var reader = new StreamReader(request.InputStream,
+        //                                      request.ContentEncoding))
+        // {
+        //     text = reader.ReadToEnd();
+        // }
+
+        // var app = WebApplication.Create();
+        // app.MapPost("/_statistic", () => "OK");
+        // if (Global.MODE == Global.Mode.balancer) {
+        //     app.MapPost("/_statistic/servers", () => Global.nodes);
+        //     app.MapPost("/_statistic/register", () => "uniplemented"); //найти сервер и вернуть 200/400
+        //     app.MapPost("/_statistic/unregister", () => "uniplemented");//найти сервер и вернуть 200/400
+        // }
+        // app.Run();
+
+        HttpClient client = new HttpClient();
+        client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/vnd.api.v1+json"));//ACCEPT header
+
+        //главный поток - обработка статистики и подключения
+        while (!GlobalToken.IsCancellationRequested)
+        {
+            //ILogger log.LogInformation("Name: " + list.Count());
+
+            //System.Console.Clear();
+            if (Global.MODE == Global.Mode.balancer)
+            {
+                Console.WriteLine($"Nodes: {Global.nodes.Count}");
+                foreach (var n in Global.nodes)
+                {
+                    Console.WriteLine($"{n.Sessions};{n.status};{n.id};{n.YYY}");
+                }
+
+            }
+            else if (Global.MODE == Global.Mode.node)
+            {
+                
+                //var str=JsonSerializer.Serialize(Global.nodes[0]);
+                var content = new StringContent(JsonSerializer.Serialize(Global.nodes[0]), Encoding.UTF8, "application/json");//CONTENT-TYPE header
+                
+                using HttpResponseMessage response = await client.PostAsync(Global.WWW, content);
+                response.EnsureSuccessStatusCode();
+                string responseBody = await response.Content.ReadAsStringAsync();
+                switch (response.StatusCode){
+                    case HttpStatusCode.Created: 
+                        Global.nodes[0].status=Rest.Status.update;
+                        Rest.NodeResponse? noderesponse=JsonSerializer.Deserialize<NodeResponse>(responseBody);
+                        if (noderesponse==null) break;
+                        Global.nodes[0].id=noderesponse.id;
+                        Console.WriteLine("Added to slot "+Global.nodes[0].id);
+                        break;
+                    case HttpStatusCode.BadRequest:
+                        GlobalToken.Cancel();
+                        break;
+                    default: break;
+                }
+
+            }
+            await Task.Delay(Global.TIMEOUT);
+        }
+
+        if (Global.MODE == Global.Mode.node){
+            Global.nodes[0].status=Rest.Status.unregister;
+            var content = new StringContent(JsonSerializer.Serialize(Global.nodes[0]), Encoding.UTF8, "application/json");
+            using HttpResponseMessage response = await client.PostAsync(Global.WWW, content);
+            Console.WriteLine("Removed "+response.EnsureSuccessStatusCode());
+        }
 
         GlobalToken.Cancel();
-        Task.WaitAny(taskListener);
+        Task.WaitAll(taskServer, taskBalancer);
         await Task.CompletedTask;
     }
 
@@ -215,7 +343,7 @@ public class Program
     {
         FileSystemWatcher watcher = new FileSystemWatcher();
 
-        watcher.Path = Global.website;
+        watcher.Path = Global.WebSiteDirectory;
 
         //// watcher.NotifyFilter = NotifyFilters.LastAccess | NotifyFilters.LastWrite
         ////    | NotifyFilters.FileName | NotifyFilters.DirectoryName;
@@ -278,9 +406,8 @@ public class Program
 
                     Console.WriteLine(AppDomain.CurrentDomain.BaseDirectory);
 
-                    foreach (var f in Directory.GetFiles($"{Global.website}/dlls/", "*.dll"))//Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..."));
+                    foreach (var f in Directory.GetFiles($"{Global.WebSiteDirectory}/dlls/", "*.dll"))//Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..."));
                     {
-
                         var x = Assembly.LoadFrom(Path.GetFullPath(f));
                         Type[] types = x.GetTypes();
                         foreach (Type t in types)
@@ -332,7 +459,7 @@ public class Program
                     // }
 
                     manager.pages.Clear();
-                    foreach (var f in Directory.GetFiles($"{Global.website}/pages/"))
+                    foreach (var f in Directory.GetFiles($"{Global.WebSiteDirectory}/pages/"))
                     {
                         Script service = CSharpScript.Create(File.ReadAllText(f), options, typeof(Call<Page>), null);
                         service.RunAsync(globals: callpage, catchException: catchException, new CancellationToken()).GetAwaiter().GetResult();
@@ -408,7 +535,7 @@ public class Program
             listener.parser.OnPong += OnPong;
             //sendPing = grinder.SendPing;
         }
-        public PongService(IManager manager) {this.manager=manager; }
+        public PongService(IManager manager) { this.manager = manager; }
         //public SendPong sendPing = (async (a, b) => { return await Task.FromResult(false); });
 
         public async Task OnPong(Server.Session session, byte[] data, uint id)// byte[] frame, int opcode, ulong pos, ulong len)
@@ -431,7 +558,7 @@ public class Program
             listener.parser.OnUpdate += OnUpdate;
         }
 
-        public UrlService(IManager manager) {this.manager=manager; }
+        public UrlService(IManager manager) { this.manager = manager; }
 
         public async Task OnLson(Server.Session session, string text)// byte[] frame, int opcode, ulong pos, ulong len)
         {
@@ -447,7 +574,7 @@ public class Program
             {
                 Console.WriteLine($"Requested page: {text}");
                 //var _url = (operands.Length > 1) ? operands[1] : Global.WWW + "Err404.html";
-                var _url = (operands.Length > 1) ? operands[1] :"Err404.html";
+                var _url = (operands.Length > 1) ? operands[1] : "Err404.html";
                 //if (operands.Length<2) return await Task.FromResult(false);//{
                 //    //переход на главную
                 //}
@@ -459,14 +586,15 @@ public class Program
 
                 //if (_location==CurrentPage.Url) await Task.FromResult(true); //а может рефреш?
 
-                var p=_location.TrimEnd('/');
-                Manager m=manager as Manager;
-                var grinderpage = m.pages.Find(x=>string.Compare(x._id, p)==0);
-                if (grinderpage==null) {
+                var p = _location.TrimEnd('/');
+                Manager m = manager as Manager;
+                var grinderpage = m.pages.Find(x => string.Compare(x._id, p) == 0);
+                if (grinderpage == null)
+                {
                     Console.WriteLine($"Location not found: {_location} {p}");
                     return;
                 }
-                session.page=grinderpage;
+                session.page = grinderpage;
                 //session.page = Program.InstantiatePage(_location);// .Find(x => string.Compare(x.Url, _location) == 0);
 
                 //if (p == null) session.page = templates[0].Instantiate(); //404
@@ -531,7 +659,7 @@ public class Program
             listener.parser.OnData += OnData;
         }
 
-        public EchoService(IManager manager) {this.manager=manager; }
+        public EchoService(IManager manager) { this.manager = manager; }
         public async Task OnData(Server.Session session, Server.Transfer transfer)// byte[] frame, int opcode, ulong pos, ulong len)
         {
             Console.WriteLine($"({transfer.position} of {transfer.length}) ");
@@ -552,7 +680,7 @@ public class Program
         {
             listener.parser.OnLson += OnLson;
         }
-        public EventService(IManager manager) {this.manager=manager; }   
+        public EventService(IManager manager) { this.manager = manager; }
         public async Task OnLson(Server.Session session, string text)// byte[] frame, int opcode, ulong pos, ulong len)
         {
             //string text = Encoding.UTF8.GetString(msg.data);
