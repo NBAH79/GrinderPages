@@ -349,3 +349,35 @@ function setDocument(text) {
     document.write(text);
     document.close();
 }
+
+(function($) {
+    if (typeof $ !== 'function') return;
+    $.longPull = function(args) {
+        var opts = $.extend({ method:'GET', onupdate:null, onerror:null, delimiter:'\n', timeout:0}, args || {});
+        opts.index = 0;
+        var req = $.ajaxSettings.xhr();
+        req.open(opts.method, opts.url, true);
+        req.timeout = opts.timeout;
+        req.onabort = opts.onabort || null;
+        req.onerror = opts.onerror || null;
+        req.onloadstart = opts.onloadstart || null;
+        req.onloadend = opts.onloadend || null;
+        req.ontimeout = opts.ontimeout || null;
+        req.onprogress = function(e) {
+            try {
+                var a = new String(e.srcElement.response).split(opts.delimiter);
+                for(var i=opts.index; i<a.length; i++) {
+                    try {
+                        var data = JSON.parse(a[i]); // may not be complete
+                        if (typeof opts.onupdate==='function') opts.onupdate(data, i);
+                        opts.index = i + 1;
+                    } catch(fx){}
+                }
+            }
+            catch(e){}
+        };
+        req.send(opts.data || null);
+    };
+})(jQuery);
+
+$.longPull({ url: 'http://localhost:xxxxx/Test', onupdate: function(data) { console.log(data); }});
